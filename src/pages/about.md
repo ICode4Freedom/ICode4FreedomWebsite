@@ -26,6 +26,6 @@ Because of this system, most people are trained to consume content and we look a
   
 Just know that I'm a real person, just like you, who just wants to help others, and write about what I've learned to help myself be more equip to do so.
 
-I do it all for my own personal freedom; Freedom of my mind and the ability to live my life with purpose. I hope that choose to live freely, and with intention and purpose as well. Thanks for reading!
+I do it all for my own personal freedom; Freedom of my mind and the ability to live my life with purpose. I hope that you choose to live freely with intention and purpose as well. Thanks for reading!
 
 Mike :)
