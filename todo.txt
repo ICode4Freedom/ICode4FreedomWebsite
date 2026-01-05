@@ -1,0 +1,7 @@
+
+Bugs:
+- Standardize/fix resizing of blogs on the home screen; If the description gets too long, it will go outside of the border box
+
+Features:
+- Search icon/bar for looking up specific blogs and tags for blogs
+
