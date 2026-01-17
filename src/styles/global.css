@@ -72,7 +72,7 @@ body::before{
 } */
 
 /* Tags before start of each paragraph */
-.content p::before {
+.content p:not(:has(b, strong, u))::before {
   content: "> ";
   color: var(--fg);
 }
