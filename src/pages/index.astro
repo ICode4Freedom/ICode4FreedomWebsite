@@ -9,7 +9,14 @@ import BlogSearch from "../components/BlogSearch.astro";
 const allPostsRaw = Object.values(import.meta.glob('./blogs/*.md', {eager: true}));
 const allPosts = allPostsRaw
   .filter((post: any) => post.rawContent && post.rawContent().trim().length > 0)
-  .sort((a: any, b: any) => new Date(b.frontmatter.pubDate).getTime() - new Date(a.frontmatter.pubDate).getTime());
+  .sort((a: any, b: any) => {
+    // Sort featured posts first, then by date
+    const aFeatured = a.frontmatter.featured || false;
+    const bFeatured = b.frontmatter.featured || false;
+    if (aFeatured && !bFeatured) return -1;
+    if (!aFeatured && bFeatured) return 1;
+    return new Date(b.frontmatter.pubDate).getTime() - new Date(a.frontmatter.pubDate).getTime();
+  });
 
 // Extract blog data for terminal
 const blogData = allPosts.map((post: any) => ({
@@ -29,7 +36,17 @@ const allTags = [...new Set(allPosts.flatMap((post: any) => post.frontmatter.tag
       <BlogSearch allTags={allTags} />
       <ul class="blog-list">
         <div class="blog-list-content">
-          {allPosts.map((post: any) => <BlogPost url={post.url} title={post.frontmatter.title} pubDate = {post.frontmatter.pubDate} description={post.frontmatter.description} tags = {post.frontmatter.tags} />)}
+          {allPosts.map((post: any) => (
+            <BlogPost 
+              url={post.url} 
+              title={post.frontmatter.title} 
+              pubDate={post.frontmatter.pubDate} 
+              description={post.frontmatter.description} 
+              tags={post.frontmatter.tags}
+              featured={post.frontmatter.featured}
+              image={post.frontmatter.image}
+            />
+          ))}
         </div>
       </ul>
     </div>

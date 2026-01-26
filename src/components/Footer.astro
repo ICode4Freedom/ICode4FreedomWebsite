@@ -4,6 +4,39 @@ import ImageLink from "./ImageLink.astro"
 ---
 
 <footer>
-<SocialLink platform = 'X' username = 'ICode4Freedom' name = 'X'/>
-<ImageLink imgName = 'buymeacoffee' username = 'ICode4Freedom'/>
-</footer> 
+  <SocialLink platform='X' username='ICode4Freedom' name='X'/>
+  <ImageLink imgName='buymeacoffee' username='ICode4Freedom'/>
+  <a href="/rss.xml" class="rss-link" title="RSS Feed">📡 RSS</a>
+  <span class="follower-count">𝕏 164 followers</span>
+</footer>
+
+<style>
+  footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .rss-link {
+    padding: 0.125rem 0.5rem;
+    color: var(--fg);
+    background-color: var(--ui-bg);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    text-decoration: none;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+  }
+
+  .rss-link:hover {
+    background-color: var(--ui-accent);
+    color: #fff;
+  }
+
+  .follower-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--fg-d);
+    opacity: 0.8;
+  }
+</style>

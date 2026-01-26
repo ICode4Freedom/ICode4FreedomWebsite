@@ -32,6 +32,27 @@
   --term-bg: #1e1f2a;
   --term-bc: #dcdfe4;
   --term-tc: #bcbcbc;
+
+  /* Featured post styling */
+  --featured-border: var(--terminal-green);
+  --featured-bg: rgba(0, 255, 0, 0.05);
+}
+
+/* Light theme - Romanesque warm vibes */
+[data-theme="light"] {
+  --bg: #f5f0e8;
+  --fg: #2c2416;
+  --fg-d: #5c5040;
+  --terminal-green: #2d5a27;
+  --ui-bg: #e8e0d0;
+  --ui-accent: #8b4513;
+  
+  --term-bg: #faf6f0;
+  --term-bc: #c4b8a8;
+  --term-tc: #3d3425;
+
+  --featured-border: #8b4513;
+  --featured-bg: rgba(139, 69, 19, 0.08);
 }
 
 /* Global CSS + Overlays + Animations */

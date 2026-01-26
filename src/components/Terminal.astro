@@ -1,6 +1,6 @@
 ---
 // Terminal component with interactive commands
-// Commands: help, clear, blogs, about, contact
+// Commands: help, clear, blogs, about, contact, subscribe, theme, now, rss, social
 
 interface Props {
   blogs?: Array<{
@@ -22,9 +22,11 @@ const { blogs = [] } = Astro.props;
       <span class="terminal-btn maximize"></span>
     </div>
     <span class="terminal-title">icode4freedom@terminal ~ </span>
+    <button id="theme-toggle-btn" class="theme-toggle" title="Toggle theme">🌓</button>
   </div> 
   <div class="terminal-body">
     <div id="output">
+      <div class="output-line tagline">Building in public. Learning out loud.</div>
       <div class="output-line ascii-art">
 {`
 ██╗ ██████╗ ██████╗ ██████╗ ███████╗██╗  ██╗███████╗██████╗ ███████╗███████╗██████╗  ██████╗ ███╗   ███╗
@@ -35,8 +37,8 @@ const { blogs = [] } = Astro.props;
 ╚═╝ ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═╝╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚═════╝  ╚═════╝ ╚═╝     ╚═╝
 `}
       </div>
-      <div class="output-line">Welcome to ICode4Freedom Terminal v1.0</div>
-      <div class="output-line">Type <span class="cmd-highlight">help</span> for available commands.</div>
+      <div class="output-line typing-line" id="welcome-line"></div>
+      <div class="output-line typing-line" id="help-line"></div>
       <div class="output-line">&nbsp;</div>
     </div>
     <div class="input-line">
@@ -60,23 +62,87 @@ const { blogs = [] } = Astro.props;
   const commandHistory: string[] = [];
   let historyIndex = -1;
 
+  // Typing animation for welcome messages
+  function typeText(element: HTMLElement, text: string, speed: number = 50): Promise<void> {
+    return new Promise((resolve) => {
+      let i = 0;
+      element.textContent = '';
+      const timer = setInterval(() => {
+        if (i < text.length) {
+          element.textContent += text.charAt(i);
+          i++;
+        } else {
+          clearInterval(timer);
+          resolve();
+        }
+      }, speed);
+    });
+  }
+
+  // Run typing animation on load
+  async function initTypingAnimation() {
+    const welcomeLine = document.getElementById('welcome-line');
+    const helpLine = document.getElementById('help-line');
+    
+    if (welcomeLine) {
+      await typeText(welcomeLine, 'Welcome to ICode4Freedom Terminal v1.0', 40);
+    }
+    if (helpLine) {
+      // Add slight delay then type help message
+      await new Promise(r => setTimeout(r, 300));
+      helpLine.innerHTML = 'Type <span class="cmd-highlight">help</span> for available commands.';
+      helpLine.style.opacity = '0';
+      helpLine.style.transition = 'opacity 0.3s';
+      setTimeout(() => { helpLine.style.opacity = '1'; }, 50);
+    }
+  }
+
+  // Theme toggle functionality
+  function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    return `Theme switched to ${newTheme} mode.`;
+  }
+
+  // Initialize theme on load
+  initTheme();
+
+  // Theme toggle button
+  const themeBtn = document.getElementById('theme-toggle-btn');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      toggleTheme();
+    });
+  }
+
   const commands: Record<string, (args: string[]) => string | string[]> = {
     help: () => [
       '',
       '╔════════════════════════════════════════════╗',
       '║           AVAILABLE COMMANDS               ║',
       '╠════════════════════════════════════════════╣',
-      '║  help     - Show this help message         ║',
-      '║  clear    - Clear the terminal             ║',
-      '║  about    - About Mike                     ║',
-      '║  skills   - Technical skills               ║',
-      '║  projects - Current projects               ║',
-      '║  blogs    - List all blog posts            ║',
-      '║  read <n> - Preview blog post #n           ║',
-      '║  tags     - Show all available tags        ║',
-      '║  social   - Social links                   ║',
-      '║  contact  - Contact information            ║',
-      '║  hire     - Work with me                   ║',
+      '║  help      - Show this help message        ║',
+      '║  clear     - Clear the terminal            ║',
+      '║  about     - About Mike                    ║',
+      '║  skills    - Technical skills              ║',
+      '║  projects  - Current projects              ║',
+      '║  blogs     - List all blog posts           ║',
+      '║  read <n>  - Preview blog post #n          ║',
+      '║  tags      - Show all available tags       ║',
+      '║  social    - Social links & stats          ║',
+      '║  contact   - Contact information           ║',
+      '║  hire      - Work with me                  ║',
+      '║  now       - What I\'m doing now            ║',
+      '║  subscribe - Newsletter signup             ║',
+      '║  rss       - RSS feed info                 ║',
+      '║  theme     - Toggle dark/light mode        ║',
       '╚════════════════════════════════════════════╝',
       ''
     ],
@@ -225,6 +291,8 @@ const { blogs = [] } = Astro.props;
       '╚══════════════════════════════════════════════╝',
       '',
       '  𝕏  Twitter/X    → @ICode4Freedom',
+      '     └─ 164 followers and growing! 📈',
+      '',
       '  📦 GitHub       → github.com/MichaelACraig',
       '  💼 LinkedIn     → linkedin.com/in/michael-a-craig',
       '  ☕ BuyMeACoffee → buymeacoffee.com/ICode4Freedom',
@@ -268,6 +336,61 @@ const { blogs = [] } = Astro.props;
       '  Let\'s build something cool.',
       ''
     ],
+    
+    now: () => [
+      '',
+      '╔══════════════════════════════════════════════╗',
+      '║              WHAT I\'M DOING NOW              ║',
+      '╚══════════════════════════════════════════════╝',
+      '',
+      '  Check out my /now page for current focus:',
+      '',
+      '  → https://icode4freedom.com/now',
+      '',
+      '  Updated regularly with what I\'m working on,',
+      '  learning, reading, and thinking about.',
+      ''
+    ],
+    
+    subscribe: () => [
+      '',
+      '╔══════════════════════════════════════════════╗',
+      '║             📬 STAY IN THE LOOP              ║',
+      '╚══════════════════════════════════════════════╝',
+      '',
+      '  Want updates on new posts and projects?',
+      '',
+      '  📧 Email me at: michael@icode4freedom.com',
+      '     Subject: "Subscribe to Newsletter"',
+      '',
+      '  🐦 Or follow on X: @ICode4Freedom',
+      '     for real-time updates!',
+      '',
+      '  📡 RSS Feed: /rss.xml',
+      '',
+      '  ─────────────────────────────────────────────',
+      '  No spam, just good stuff. Promise.',
+      ''
+    ],
+    
+    rss: () => [
+      '',
+      '╔══════════════════════════════════════════════╗',
+      '║                 📡 RSS FEED                  ║',
+      '╚══════════════════════════════════════════════╝',
+      '',
+      '  Subscribe via RSS to get new posts:',
+      '',
+      '  → https://icode4freedom.com/rss.xml',
+      '',
+      '  Add this URL to your favorite RSS reader',
+      '  (Feedly, Inoreader, NetNewsWire, etc.)',
+      ''
+    ],
+    
+    theme: () => {
+      return toggleTheme();
+    },
     
     whoami: () => 'visitor@icode4freedom.com',
     
@@ -362,6 +485,9 @@ const { blogs = [] } = Astro.props;
       input.focus();
     });
   }
+
+  // Start typing animation after a short delay
+  setTimeout(initTypingAnimation, 500);
 </script>
 
 <style>
@@ -405,6 +531,22 @@ const { blogs = [] } = Astro.props;
   .terminal-title {
     color: #999;
     font-size: 12px;
+    flex: 1;
+  }
+
+  .theme-toggle {
+    background: transparent;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+
+  .theme-toggle:hover {
+    opacity: 1;
   }
 
   .terminal-body {
@@ -420,6 +562,14 @@ const { blogs = [] } = Astro.props;
     line-height: 1.4;
     white-space: pre-wrap;
     word-wrap: break-word;
+  }
+
+  .output-line.tagline {
+    color: var(--terminal-green);
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-shadow: 0 0 10px var(--terminal-green);
   }
 
   .output-line.ascii-art {
