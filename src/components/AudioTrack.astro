@@ -1,9 +1,326 @@
 ---
-const {trackName} = Astro.props
+// AudioTrack component - Terminal-styled audio player for blog posts
+// Add trackName to frontmatter and place audio file in public/audio/
+
+interface Props {
+  trackName?: string;
+}
+
+const { trackName } = Astro.props;
 ---
 
-<audio controls>
-  <source src=`../src/audio/${trackName}.mp3`>
-  <source src=`../src/audio/${trackName}.wav`>
-  This browser does not support HTML5 Audio! );
-</audio>
+{trackName && (
+  <div class="audio-player">
+    <div class="audio-header">
+      <span class="audio-icon">♪</span>
+      <span class="audio-title">NOW PLAYING: {trackName}</span>
+    </div>
+    <div class="audio-controls">
+      <audio id="audio-element" preload="metadata">
+        <source src={`/audio/${trackName}.mp3`} type="audio/mpeg" />
+        <source src={`/audio/${trackName}.wav`} type="audio/wav" />
+        <source src={`/audio/${trackName}.ogg`} type="audio/ogg" />
+        Your browser does not support audio playback.
+      </audio>
+      <div class="custom-player">
+        <button class="play-btn" id="play-pause-btn" aria-label="Play/Pause">
+          <span class="play-icon">▶</span>
+          <span class="pause-icon" style="display: none;">❚❚</span>
+        </button>
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="time-display">
+            <span id="current-time">0:00</span>
+            <span class="time-separator">/</span>
+            <span id="duration">0:00</span>
+          </div>
+        </div>
+        <div class="volume-container">
+          <button class="volume-btn" id="volume-btn" aria-label="Mute/Unmute">🔊</button>
+          <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.7" class="volume-slider" />
+        </div>
+      </div>
+    </div>
+    <div class="audio-visualizer" id="visualizer">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </div>
+  </div>
+)}
+
+<script>
+  const audio = document.getElementById('audio-element') as HTMLAudioElement;
+  const playPauseBtn = document.getElementById('play-pause-btn');
+  const playIcon = playPauseBtn?.querySelector('.play-icon') as HTMLElement;
+  const pauseIcon = playPauseBtn?.querySelector('.pause-icon') as HTMLElement;
+  const progressBar = document.getElementById('progress-bar');
+  const progressFill = document.getElementById('progress-fill');
+  const currentTimeEl = document.getElementById('current-time');
+  const durationEl = document.getElementById('duration');
+  const volumeBtn = document.getElementById('volume-btn');
+  const volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
+  const visualizer = document.getElementById('visualizer');
+
+  if (audio) {
+    // Set initial volume
+    audio.volume = 0.7;
+
+    // Format time helper
+    function formatTime(seconds: number): string {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Play/Pause
+    playPauseBtn?.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+        if (playIcon) playIcon.style.display = 'none';
+        if (pauseIcon) pauseIcon.style.display = 'inline';
+        visualizer?.classList.add('playing');
+      } else {
+        audio.pause();
+        if (playIcon) playIcon.style.display = 'inline';
+        if (pauseIcon) pauseIcon.style.display = 'none';
+        visualizer?.classList.remove('playing');
+      }
+    });
+
+    // Update progress
+    audio.addEventListener('timeupdate', () => {
+      if (progressFill && audio.duration) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = `${percent}%`;
+      }
+      if (currentTimeEl) {
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+      }
+    });
+
+    // Set duration when loaded
+    audio.addEventListener('loadedmetadata', () => {
+      if (durationEl) {
+        durationEl.textContent = formatTime(audio.duration);
+      }
+    });
+
+    // Click to seek
+    progressBar?.addEventListener('click', (e) => {
+      const rect = progressBar.getBoundingClientRect();
+      const percent = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = percent * audio.duration;
+    });
+
+    // Volume control
+    volumeSlider?.addEventListener('input', () => {
+      audio.volume = parseFloat(volumeSlider.value);
+      updateVolumeIcon();
+    });
+
+    volumeBtn?.addEventListener('click', () => {
+      audio.muted = !audio.muted;
+      updateVolumeIcon();
+    });
+
+    function updateVolumeIcon() {
+      if (volumeBtn) {
+        if (audio.muted || audio.volume === 0) {
+          volumeBtn.textContent = '🔇';
+        } else if (audio.volume < 0.5) {
+          volumeBtn.textContent = '🔉';
+        } else {
+          volumeBtn.textContent = '🔊';
+        }
+      }
+    }
+
+    // Reset on end
+    audio.addEventListener('ended', () => {
+      if (playIcon) playIcon.style.display = 'inline';
+      if (pauseIcon) pauseIcon.style.display = 'none';
+      visualizer?.classList.remove('playing');
+    });
+  }
+</script>
+
+<style>
+  .audio-player {
+    background: var(--term-bg, #1e1f2a);
+    border: 2px solid var(--terminal-green, #00ff00);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    font-family: var(--font-mono, monospace);
+  }
+
+  .audio-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--terminal-green, #00ff00);
+    font-size: 0.9rem;
+  }
+
+  .audio-icon {
+    font-size: 1.2rem;
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .audio-controls audio {
+    display: none;
+  }
+
+  .custom-player {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .play-btn {
+    background: transparent;
+    border: 2px solid var(--terminal-green, #00ff00);
+    color: var(--terminal-green, #00ff00);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .play-btn:hover {
+    background: var(--terminal-green, #00ff00);
+    color: var(--term-bg, #1e1f2a);
+  }
+
+  .progress-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--terminal-green, #00ff00);
+    width: 0%;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 10px var(--terminal-green, #00ff00);
+  }
+
+  .time-display {
+    display: flex;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--fg-d, #b9b9b9);
+  }
+
+  .volume-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .volume-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0;
+  }
+
+  .volume-slider {
+    width: 60px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--terminal-green, #00ff00);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .audio-visualizer {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 3px;
+    height: 30px;
+    margin-top: 0.75rem;
+  }
+
+  .audio-visualizer .bar {
+    width: 4px;
+    background: var(--terminal-green, #00ff00);
+    border-radius: 2px;
+    height: 5px;
+    opacity: 0.3;
+    transition: height 0.1s;
+  }
+
+  .audio-visualizer.playing .bar {
+    opacity: 1;
+    animation: visualize 0.5s ease-in-out infinite;
+  }
+
+  .audio-visualizer.playing .bar:nth-child(1) { animation-delay: 0s; }
+  .audio-visualizer.playing .bar:nth-child(2) { animation-delay: 0.1s; }
+  .audio-visualizer.playing .bar:nth-child(3) { animation-delay: 0.2s; }
+  .audio-visualizer.playing .bar:nth-child(4) { animation-delay: 0.3s; }
+  .audio-visualizer.playing .bar:nth-child(5) { animation-delay: 0.2s; }
+  .audio-visualizer.playing .bar:nth-child(6) { animation-delay: 0.1s; }
+  .audio-visualizer.playing .bar:nth-child(7) { animation-delay: 0.15s; }
+  .audio-visualizer.playing .bar:nth-child(8) { animation-delay: 0.25s; }
+
+  @keyframes visualize {
+    0%, 100% { height: 5px; }
+    50% { height: 25px; }
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .custom-player {
+      flex-wrap: wrap;
+    }
+    
+    .volume-container {
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+  }
+</style>

@@ -305,38 +305,7 @@ audio{
   box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
 }
 
-/* About me Button (Homepage Only) */
-.about{
-  font-size: 1.2rem;
-  position: fixed;
-  top: 4.5rem;
-  right: 1.5rem;
-  z-index: 100;
-  background: var(--ui-bg);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: 1px solid var(--fg-d);
-}
-
-.about ul {
-  margin: 0;
-  padding: 0;
-}
-
-.about a{
-  color: var(--fg);
-  text-decoration: none;
-}
-
-.about li{
-  list-style-type: none;
-}
-
-.about a:hover,
-.about a:link:hover,
-.about a:visited:hover{
-  color: var(--terminal-green);
-}
+/* About me Button - REMOVED, now integrated into terminal */
 
 
 /* Image Content */

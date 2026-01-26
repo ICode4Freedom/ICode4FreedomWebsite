@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import BlogPost from "../components/BlogPost.astro";
-import AboutButton from "../components/AboutButton.astro";
 import SubscribeButton from "../components/SubscribeButton.astro";
 import Terminal from "../components/Terminal.astro";
 import BlogSearch from "../components/BlogSearch.astro";
@@ -37,7 +36,6 @@ const allTags = [...new Set(allPosts.flatMap((post: any) => post.frontmatter.tag
     <div class="right-panel">
       <Terminal blogs={blogData} />
     </div>
-    <AboutButton />
     <SubscribeButton />
   </div>
 </BaseLayout>
