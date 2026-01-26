@@ -5,7 +5,11 @@ import AboutButton from "../components/AboutButton.astro";
 import SubscribeButton from "../components/SubscribeButton.astro";
 import Terminal from "../components/Terminal.astro";
 
-const allPosts = Object.values(import.meta.glob('./blogs/*.md', {eager: true})).reverse(); // All blog posts in posts directory
+// Get all blog posts and filter out empty ones (no content)
+const allPostsRaw = Object.values(import.meta.glob('./blogs/*.md', {eager: true}));
+const allPosts = allPostsRaw
+  .filter((post: any) => post.rawContent && post.rawContent().trim().length > 0)
+  .sort((a: any, b: any) => new Date(b.frontmatter.pubDate).getTime() - new Date(a.frontmatter.pubDate).getTime());
 ---
 
 <BaseLayout>
