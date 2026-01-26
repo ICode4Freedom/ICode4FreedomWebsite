@@ -4,23 +4,77 @@ import BlogPost from "../components/BlogPost.astro";
 import AboutButton from "../components/AboutButton.astro";
 import SubscribeButton from "../components/SubscribeButton.astro";
 import Terminal from "../components/Terminal.astro";
+import BlogSearch from "../components/BlogSearch.astro";
 
 // Get all blog posts and filter out empty ones (no content)
 const allPostsRaw = Object.values(import.meta.glob('./blogs/*.md', {eager: true}));
 const allPosts = allPostsRaw
   .filter((post: any) => post.rawContent && post.rawContent().trim().length > 0)
   .sort((a: any, b: any) => new Date(b.frontmatter.pubDate).getTime() - new Date(a.frontmatter.pubDate).getTime());
+
+// Extract blog data for terminal
+const blogData = allPosts.map((post: any) => ({
+  title: post.frontmatter.title,
+  url: post.url,
+  description: post.frontmatter.description,
+  tags: post.frontmatter.tags || []
+}));
+
+// Extract all unique tags
+const allTags = [...new Set(allPosts.flatMap((post: any) => post.frontmatter.tags || []))];
 ---
 
 <BaseLayout>
   <div class="homepage-content">
-    <ul class="blog-list">
-      <div class="blog-list-content">
-        {allPosts.map((post: any) => <BlogPost url={post.url} title={post.frontmatter.title} pubDate = {post.frontmatter.pubDate}description={post.frontmatter.description} tags = {post.frontmatter.tags} />)}
-      </div>
-    </ul>
-    <!-- <Terminal /> -->
+    <div class="left-panel">
+      <BlogSearch allTags={allTags} />
+      <ul class="blog-list">
+        <div class="blog-list-content">
+          {allPosts.map((post: any) => <BlogPost url={post.url} title={post.frontmatter.title} pubDate = {post.frontmatter.pubDate} description={post.frontmatter.description} tags = {post.frontmatter.tags} />)}
+        </div>
+      </ul>
+    </div>
+    <div class="right-panel">
+      <Terminal blogs={blogData} />
+    </div>
     <AboutButton />
     <SubscribeButton />
   </div>
 </BaseLayout>
+
+<style>
+  .homepage-content {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem;
+    position: relative;
+  }
+
+  .left-panel {
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .right-panel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+  }
+
+  /* Responsive: Stack on smaller screens */
+  @media (max-width: 1200px) {
+    .homepage-content {
+      flex-direction: column;
+    }
+
+    .left-panel {
+      width: 100%;
+    }
+
+    .right-panel {
+      width: 100%;
+    }
+  }
+</style>

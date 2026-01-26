@@ -1,16 +1,361 @@
 ---
+// Terminal component with interactive commands
+// Commands: help, clear, blogs, about, contact
 
+interface Props {
+  blogs?: Array<{
+    title: string;
+    url: string;
+    description: string;
+    tags: string[];
+  }>;
+}
+
+const { blogs = [] } = Astro.props;
 ---
 
 <div class="terminal">
   <div class="terminal-header">
-    <span class="x-button"></span>
+    <div class="terminal-buttons">
+      <span class="terminal-btn close"></span>
+      <span class="terminal-btn minimize"></span>
+      <span class="terminal-btn maximize"></span>
+    </div>
+    <span class="terminal-title">icode4freedom@terminal ~ </span>
   </div> 
   <div class="terminal-body">
-    <div id="output"></div>
+    <div id="output">
+      <div class="output-line ascii-art">
+{`
+ ██╗ ██████╗ ██████╗ ██████╗ ███████╗██╗  ██╗
+ ██║██╔════╝██╔═══██╗██╔══██╗██╔════╝██║  ██║
+ ██║██║     ██║   ██║██║  ██║█████╗  ███████║
+ ██║██║     ██║   ██║██║  ██║██╔══╝  ╚════██║
+ ██║╚██████╗╚██████╔╝██████╔╝███████╗     ██║
+ ╚═╝ ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═╝
+          F R E E D O M
+`}
+      </div>
+      <div class="output-line">Welcome to ICode4Freedom Terminal v1.0</div>
+      <div class="output-line">Type <span class="cmd-highlight">help</span> for available commands.</div>
+      <div class="output-line">&nbsp;</div>
+    </div>
     <div class="input-line">
       <span class="prompt">$ </span>
-      <input type="text" id="command-input" autofocus>
+      <input type="text" id="command-input" autocomplete="off" spellcheck="false">
+      <span class="cursor">_</span>
     </div>
   </div>
 </div>
+
+<!-- Pass blog data to JS -->
+<script define:vars={{ blogs }}>
+  window.__TERMINAL_BLOGS__ = blogs;
+</script>
+
+<script>
+  const output = document.getElementById('output');
+  const input = document.getElementById('command-input') as HTMLInputElement;
+  const blogs = (window as any).__TERMINAL_BLOGS__ || [];
+  
+  const commandHistory: string[] = [];
+  let historyIndex = -1;
+
+  const commands: Record<string, (args: string[]) => string | string[]> = {
+    help: () => [
+      '',
+      '╔════════════════════════════════════════════╗',
+      '║           AVAILABLE COMMANDS               ║',
+      '╠════════════════════════════════════════════╣',
+      '║  help     - Show this help message         ║',
+      '║  clear    - Clear the terminal             ║',
+      '║  blogs    - List all blog posts            ║',
+      '║  read <n> - Preview blog post #n           ║',
+      '║  tags     - Show all available tags        ║',
+      '║  about    - About ICode4Freedom            ║',
+      '║  contact  - Contact information            ║',
+      '║  whoami   - Who am I?                      ║',
+      '║  date     - Show current date/time         ║',
+      '║  echo     - Echo back your text            ║',
+      '╚════════════════════════════════════════════╝',
+      ''
+    ],
+    
+    clear: () => {
+      if (output) output.innerHTML = '';
+      return '';
+    },
+    
+    blogs: () => {
+      if (blogs.length === 0) {
+        return 'No blog posts found.';
+      }
+      const lines = ['', '📚 BLOG POSTS:', '─'.repeat(40)];
+      blogs.forEach((blog: any, i: number) => {
+        lines.push(`  [${i + 1}] ${blog.title}`);
+        if (blog.tags && blog.tags.length > 0) {
+          lines.push(`      Tags: ${blog.tags.join(', ')}`);
+        }
+      });
+      lines.push('─'.repeat(40));
+      lines.push('Use "read <number>" to preview a post');
+      lines.push('');
+      return lines;
+    },
+    
+    read: (args: string[]) => {
+      const num = parseInt(args[0]);
+      if (isNaN(num) || num < 1 || num > blogs.length) {
+        return `Usage: read <1-${blogs.length}>`;
+      }
+      const blog = blogs[num - 1];
+      return [
+        '',
+        '═'.repeat(50),
+        `📄 ${blog.title}`,
+        '═'.repeat(50),
+        '',
+        `Description: ${blog.description}`,
+        '',
+        blog.tags?.length ? `Tags: ${blog.tags.join(', ')}` : '',
+        '',
+        `→ Read full post: ${blog.url}`,
+        '',
+        '─'.repeat(50),
+        ''
+      ].filter(l => l !== undefined);
+    },
+    
+    tags: () => {
+      const allTags = new Set<string>();
+      blogs.forEach((blog: any) => {
+        if (blog.tags) {
+          blog.tags.forEach((tag: string) => allTags.add(tag));
+        }
+      });
+      if (allTags.size === 0) {
+        return 'No tags found.';
+      }
+      return ['', '🏷️  AVAILABLE TAGS:', '─'.repeat(30), ...Array.from(allTags).map(t => `  • ${t}`), ''];
+    },
+    
+    about: () => [
+      '',
+      '╔═══════════════════════════════════════════════╗',
+      '║              ABOUT ICODE4FREEDOM              ║',
+      '╠═══════════════════════════════════════════════╣',
+      '║  A blog about coding, freedom, and the       ║',
+      '║  intersection of technology and life.        ║',
+      '║                                              ║',
+      '║  Built with Astro + Terminal Aesthetics      ║',
+      '║  Powered by curiosity and caffeine ☕        ║',
+      '╚═══════════════════════════════════════════════╝',
+      ''
+    ],
+    
+    contact: () => [
+      '',
+      '📬 CONTACT:',
+      '─'.repeat(30),
+      '  Email: michael@icode4freedom.com',
+      '  GitHub: github.com/ICode4Freedom',
+      ''
+    ],
+    
+    whoami: () => 'visitor@icode4freedom.com',
+    
+    date: () => new Date().toLocaleString(),
+    
+    echo: (args: string[]) => args.join(' ') || '',
+    
+    neofetch: () => [
+      '',
+      '       ▄▄▄▄▄▄▄▄▄▄▄▄▄        visitor@icode4freedom',
+      '      █░░░░░░░░░░░░░█       ─────────────────────',
+      '     █░░░░░░░░░░░░░░░█      OS: Web Browser',
+      '    █░░░░░░░░░░░░░░░░░█     Host: icode4freedom.com',
+      '   █░░░░░░░░░░░░░░░░░░░█    Kernel: Astro v5.x',
+      '   █░░░░░░░░░░░░░░░░░░░█    Uptime: Since you arrived',
+      '   █░░▀▀░░░░░░░░░▀▀░░░█     Shell: Terminal v1.0',
+      '   █░░░░░░░░░░░░░░░░░░█     Theme: Matrix Dark',
+      '   █░░░░░█▀▀▀▀▀█░░░░░░█     Terminal: 80x24',
+      '   █░░░░░░░░░░░░░░░░░░█     CPU: Your Brain',
+      '    █░░░░░░░░░░░░░░░░█      Memory: Hopefully good',
+      '     █░░░░░░░░░░░░░░█       ',
+      '      █░░░░░░░░░░░░█        ',
+      ''
+    ]
+  };
+
+  function printOutput(text: string | string[]) {
+    if (!output) return;
+    const lines = Array.isArray(text) ? text : [text];
+    lines.forEach(line => {
+      const div = document.createElement('div');
+      div.className = 'output-line';
+      div.textContent = line;
+      output.appendChild(div);
+    });
+  }
+
+  function processCommand(cmd: string) {
+    const trimmed = cmd.trim();
+    if (!trimmed) return;
+    
+    // Add command echo
+    printOutput(`$ ${trimmed}`);
+    
+    // Add to history
+    commandHistory.unshift(trimmed);
+    historyIndex = -1;
+    
+    const [command, ...args] = trimmed.toLowerCase().split(/\s+/);
+    
+    if (commands[command]) {
+      const result = commands[command](args);
+      if (result) {
+        printOutput(result);
+      }
+    } else {
+      printOutput(`Command not found: ${command}. Type "help" for available commands.`);
+    }
+    
+    // Scroll to bottom
+    const terminalBody = document.querySelector('.terminal-body');
+    if (terminalBody) {
+      terminalBody.scrollTop = terminalBody.scrollHeight;
+    }
+  }
+
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        processCommand(input.value);
+        input.value = '';
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (historyIndex < commandHistory.length - 1) {
+          historyIndex++;
+          input.value = commandHistory[historyIndex];
+        }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndex > 0) {
+          historyIndex--;
+          input.value = commandHistory[historyIndex];
+        } else {
+          historyIndex = -1;
+          input.value = '';
+        }
+      }
+    });
+    
+    // Focus input when clicking anywhere in terminal
+    document.querySelector('.terminal')?.addEventListener('click', () => {
+      input.focus();
+    });
+  }
+</script>
+
+<style>
+  .terminal {
+    width: 100%;
+    max-width: 55rem;
+    background: var(--term-bg);
+    border-radius: 8px;
+    border: 2px solid var(--term-bc);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .terminal-header {
+    background: linear-gradient(to bottom, #3c3c3c, #2a2a2a);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .terminal-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .terminal-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .terminal-btn.close { background: #ff5f56; }
+  .terminal-btn.minimize { background: #ffbd2e; }
+  .terminal-btn.maximize { background: #27ca40; }
+
+  .terminal-title {
+    color: #999;
+    font-size: 12px;
+  }
+
+  .terminal-body {
+    padding: 12px;
+    height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--fg) var(--term-bg);
+  }
+
+  .output-line {
+    color: var(--term-tc);
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .output-line.ascii-art {
+    color: var(--terminal-green);
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  .cmd-highlight {
+    color: var(--terminal-green);
+    font-weight: bold;
+  }
+
+  .input-line {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .prompt {
+    color: var(--terminal-green);
+    margin-right: 8px;
+    font-weight: bold;
+  }
+
+  #command-input {
+    background: transparent;
+    border: none;
+    color: var(--term-tc);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    flex: 1;
+    outline: none;
+    caret-color: transparent;
+  }
+
+  .cursor {
+    color: var(--terminal-green);
+    animation: blink 1s steps(1) infinite;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+</style>
