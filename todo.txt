@@ -1,7 +1,13 @@
-
 Bugs:
-- Standardize/fix resizing of blogs on the home screen; If the description gets too long, it will go outside of the border box
+✅ FIXED - Standardize/fix resizing of blogs on the home screen; If the description gets too long, it will go outside of the border box
 
 Features:
-- Search icon/bar for looking up specific blogs and tags for blogs
+✅ DONE - Search icon/bar for looking up specific blogs and tags for blogs
+✅ DONE - Interactive Terminal with commands (help, clear, blogs, read, tags, about, etc.)
 
+Remaining from Notes.txt:
+- [ ] Subscribe feature and email notifications
+- [ ] ASCII Animations in terminal
+- [ ] Add loading text animation to blog posts
+- [ ] Music section (Poolsuite style)
+- [ ] Light mode with creams/whites/romanesque vibes
