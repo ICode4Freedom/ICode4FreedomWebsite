@@ -1,6 +1,7 @@
 ---
 import Navbar from '../components/Navbar.astro'
 import Footer from '../components/Footer.astro'
+import ThemeToggle from '../components/ThemeToggle.astro'
 import '../styles/global.css'
 ---
 
@@ -9,9 +10,17 @@ import '../styles/global.css'
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <title>ICodeForFreedom Website</title>
+    <title>ICode4Freedom</title>
+    <script is:inline>
+      // Initialize theme immediately to prevent flash
+      (function() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      })();
+    </script>
   </head>
   <body>
+    <ThemeToggle />
     <main>
       <Navbar />
       <slot />

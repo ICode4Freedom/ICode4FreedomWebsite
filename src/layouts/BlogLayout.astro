@@ -2,38 +2,293 @@
 import BaseLayout from "./BaseLayout.astro";
 import AudioTrack from "../components/AudioTrack.astro";
 import ImageGallery from "../components/ImageGallery.astro";
-import BlogTyping from "../scripts/BlogTyping.astro"
+import BlogTyping from "../scripts/BlogTyping.astro";
+import ReadingProgress from "../components/ReadingProgress.astro";
+import ImageLightbox from "../components/ImageLightbox.astro";
+import ShareButton from "../components/ShareButton.astro";
+import AuthorCard from "../components/AuthorCard.astro";
+import PostNavigation from "../components/PostNavigation.astro";
+import RelatedPosts from "../components/RelatedPosts.astro";
 
-const {frontmatter} = Astro.props;
+const { frontmatter, url } = Astro.props;
+
+// Check if this is a blog post (has pubDate and tags) or a standalone page
+const isBlogPost = !!frontmatter.pubDate && url?.includes('/blogs/');
+
+// Get all posts for navigation and related posts (only for blog posts)
+let prevPost = null;
+let nextPost = null;
+let postsForRelated: any[] = [];
+
+if (isBlogPost) {
+  const allPostsRaw = Object.values(import.meta.glob('../pages/blogs/*.md', { eager: true }));
+  const allPosts = allPostsRaw
+    .filter((post: any) => post.rawContent && post.rawContent().trim().length > 0)
+    .sort((a: any, b: any) => new Date(b.frontmatter.pubDate).getTime() - new Date(a.frontmatter.pubDate).getTime());
+
+  // Find current post index and get prev/next
+  const currentIndex = allPosts.findIndex((post: any) => post.url === url);
+  prevPost = currentIndex >= 0 && currentIndex < allPosts.length - 1 ? {
+    url: (allPosts[currentIndex + 1] as any).url,
+    title: (allPosts[currentIndex + 1] as any).frontmatter.title
+  } : null;
+  nextPost = currentIndex > 0 ? {
+    url: (allPosts[currentIndex - 1] as any).url,
+    title: (allPosts[currentIndex - 1] as any).frontmatter.title
+  } : null;
+
+  // Format posts for RelatedPosts component
+  postsForRelated = allPosts.map((post: any) => ({
+    url: post.url,
+    title: post.frontmatter.title,
+    tags: post.frontmatter.tags || [],
+    pubDate: post.frontmatter.pubDate
+  }));
+}
+
+// Format date nicely (only if pubDate exists)
+let formattedDate = '';
+let pubDateISO = '';
+if (frontmatter.pubDate) {
+  const pubDate = new Date(frontmatter.pubDate);
+  formattedDate = pubDate.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  pubDateISO = pubDate.toISOString();
+}
+
+// Create URL slug from title
+const titleSlug = frontmatter.title
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/(^-|-$)/g, '');
 ---
 
 <BaseLayout>
-
-  <div class="blogpost-layout">
-      <div class="blogpost">
-        <div class="blog-header">
-          <h1 class = "title">{frontmatter.title}</h1> 
+  <ReadingProgress />
+  <ImageLightbox />
+  
+  <article class="blog-article">
+    <div class="blog-container">
+      
+      <!-- Terminal-style Header -->
+      <header class="blog-header">
+        <div class="breadcrumb">
+          <span class="path">~/blogs/<span class="current">{titleSlug}</span></span>
+        </div>
+        
+        <h1 class="title">{frontmatter.title}</h1>
+        
+        <div class="meta">
+          {formattedDate && (
+            <time class="date" datetime={pubDateISO}>
+              <span class="date-label">posted:</span> {formattedDate}
+            </time>
+          )}
+          
           {frontmatter.trackName && <AudioTrack />}
-          <h3 class="pubDate">{frontmatter.pubDate && frontmatter.pubDate.toString().slice(0,10)}</h3>
         </div>
-
-        <hr class="divider" />
-
-        <div class="content">
-          <div class="text-content">
-            <BlogTyping>
-              <slot/>
-            </BlogTyping>
+        
+        {frontmatter.tags && frontmatter.tags.length > 0 && (
+          <div class="tags">
+            {frontmatter.tags.map((tag: string) => (
+              <span class="tag">{tag}</span>
+            ))}
           </div>
-          <div class="vert-divider"></div>
-        </div>
-
-        <div class="image-content">
-          <ImageGallery images={frontmatter.images} altPrefix={frontmatter.title} />
-        </div>
+        )}
+      </header>
 
       <hr class="divider" />
-    
+
+      <!-- Main Content -->
+      <div class="content-wrapper">
+        <div class="text-content">
+          <BlogTyping>
+            <slot />
+          </BlogTyping>
+        </div>
+        
+        {frontmatter.images && frontmatter.images.length > 0 && (
+          <aside class="image-sidebar">
+            <ImageGallery images={frontmatter.images} altPrefix={frontmatter.title} />
+          </aside>
+        )}
       </div>
-  </div>
+
+      <hr class="divider" />
+
+      <!-- Footer Section -->
+      <footer class="blog-footer">
+        <div class="footer-top">
+          <AuthorCard name="Mike" />
+          <div class="share-section">
+            <ShareButton title={frontmatter.title} />
+          </div>
+        </div>
+        
+        {isBlogPost && (
+          <>
+            <PostNavigation prevPost={prevPost} nextPost={nextPost} />
+            
+            <RelatedPosts 
+              currentUrl={url} 
+              currentTags={frontmatter.tags || []} 
+              allPosts={postsForRelated}
+              maxPosts={3}
+            />
+          </>
+        )}
+      </footer>
+      
+    </div>
+  </article>
 </BaseLayout>
+
+<style>
+  .blog-article {
+    width: 100%;
+    padding: 2rem 1rem;
+  }
+  
+  .blog-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+  
+  /* Header Styles */
+  .blog-header {
+    margin-bottom: 2rem;
+  }
+  
+  .breadcrumb {
+    margin-bottom: 1rem;
+  }
+  
+  .path {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--fg-d);
+  }
+  
+  .path .current {
+    color: var(--terminal-green);
+  }
+  
+  .title {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    margin: 0.5rem 0 1rem;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+  
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .date {
+    font-size: 0.9rem;
+    color: var(--fg-d);
+  }
+  
+  .date-label {
+    color: var(--terminal-green);
+  }
+  
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--ui-bg);
+    border: 1px solid var(--terminal-green);
+    color: var(--terminal-green);
+    font-family: var(--font-mono);
+    transition: all 0.2s;
+  }
+  
+  .tag:hover {
+    background: var(--terminal-green);
+    color: var(--bg);
+  }
+  
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px dashed var(--fg-d);
+    margin: 2rem 0;
+  }
+  
+  /* Content Wrapper */
+  .content-wrapper {
+    display: flex;
+    gap: 2rem;
+    position: relative;
+  }
+  
+  .text-content {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .image-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 2rem;
+    align-self: flex-start;
+  }
+  
+  /* Footer Styles */
+  .blog-footer {
+    margin-top: 2rem;
+  }
+  
+  .footer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .share-section {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  /* Responsive */
+  @media (max-width: 900px) {
+    .content-wrapper {
+      flex-direction: column;
+    }
+    
+    .image-sidebar {
+      width: 100%;
+      position: static;
+      margin-top: 2rem;
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .blog-container {
+      padding: 0 1rem;
+    }
+    
+    .footer-top {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

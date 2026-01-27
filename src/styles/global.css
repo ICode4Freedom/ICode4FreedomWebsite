@@ -92,21 +92,214 @@ body::before{
     0 0 12px rgba(51,255,51,0.3);
 } */
 
-/* Tags before start of each paragraph */
+/* ========================
+   BLOG TYPOGRAPHY & STYLING
+   ======================== */
+
+/* Blog article base typography */
+.blog-article {
+  font-size: clamp(16px, 1.125rem, 18px);
+  line-height: 1.75;
+}
+
+/* Text content within blog posts */
+.text-content {
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.text-content p {
+  margin: 1.25rem 0;
+}
+
+/* Tags before start of each paragraph - terminal prompt style */
+.text-content p:not(:has(b, strong, u))::before {
+  content: "> ";
+  color: var(--terminal-green);
+  font-weight: bold;
+}
+
+/* Also apply to .content for backwards compatibility */
 .content p:not(:has(b, strong, u))::before {
   content: "> ";
-  color: var(--fg);
+  color: var(--terminal-green);
+  font-weight: bold;
 }
 
 /* Blinking "_" at end of blogpost to mimic terminal */
+.text-content > :last-child::after,
 .content p:last-child::after {
   content: "_";
   animation: blink 1s steps(1) infinite;
+  color: var(--terminal-green);
 }
 
 @keyframes blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
+}
+
+/* Blog headings with markdown-style # prefix */
+.text-content h1,
+.text-content h2,
+.text-content h3,
+.text-content h4 {
+  margin: 2rem 0 1rem;
+  color: var(--fg);
+  position: relative;
+}
+
+.text-content h1::before {
+  content: "# ";
+  color: var(--terminal-green);
+}
+
+.text-content h2::before {
+  content: "## ";
+  color: var(--terminal-green);
+}
+
+.text-content h3::before {
+  content: "### ";
+  color: var(--terminal-green);
+}
+
+.text-content h4::before {
+  content: "#### ";
+  color: var(--terminal-green);
+}
+
+/* Code blocks - terminal theme */
+.text-content pre,
+.text-content code {
+  font-family: var(--font-mono);
+}
+
+.text-content code {
+  background: var(--ui-bg);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: var(--terminal-green);
+  border: 1px solid var(--fg-d);
+}
+
+.text-content pre {
+  background: var(--term-bg);
+  border: 2px solid var(--terminal-green);
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.text-content pre::before {
+  content: "terminal";
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  background: var(--term-bg);
+  padding: 0 0.5rem;
+  font-size: 0.7rem;
+  color: var(--terminal-green);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.text-content pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--terminal-green);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Blog links - green underline/glow on hover */
+.text-content a {
+  color: var(--terminal-green);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--terminal-green);
+  transition: all 0.2s;
+}
+
+.text-content a:hover {
+  border-bottom-style: solid;
+  text-shadow: 0 0 8px var(--terminal-green);
+}
+
+[data-theme="light"] .text-content a:hover {
+  text-shadow: none;
+  background: rgba(45, 90, 39, 0.1);
+}
+
+/* Blog images - full width with terminal border */
+.text-content img {
+  max-width: 100%;
+  height: auto;
+  border: 2px solid var(--terminal-green);
+  margin: 1.5rem 0;
+  display: block;
+}
+
+.text-content figure {
+  margin: 1.5rem 0;
+}
+
+.text-content figure img {
+  margin: 0;
+}
+
+.text-content figcaption {
+  font-size: 0.85rem;
+  color: var(--fg-d);
+  text-align: center;
+  padding: 0.5rem;
+  border: 1px solid var(--fg-d);
+  border-top: none;
+  background: var(--ui-bg);
+}
+
+.text-content figcaption::before {
+  content: "// ";
+  color: var(--terminal-green);
+}
+
+/* Blockquotes */
+.text-content blockquote {
+  border-left: 3px solid var(--terminal-green);
+  margin: 1.5rem 0;
+  padding: 0.5rem 1rem;
+  background: var(--ui-bg);
+  font-style: italic;
+}
+
+.text-content blockquote p::before {
+  content: "" !important;
+}
+
+/* Lists */
+.text-content ul,
+.text-content ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.text-content li {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.text-content ul li::marker {
+  color: var(--terminal-green);
+}
+
+/* Horizontal rules */
+.text-content hr {
+  border: none;
+  border-top: 1px dashed var(--fg-d);
+  margin: 2rem 0;
 }
 
 /* Navbar.astro*/
@@ -252,17 +445,12 @@ ul.blog-list{
   margin-top: 0.5rem;
 } 
 
-/* Content of Blogs */
+/* Content of Blogs - Legacy support */
 .content{
   position: relative;
   display: flex;
   align-items: stretch;
-  width: 60%;
-}
-
-/* Text content; Also contains the loading of the font */
-.text-content{
-  flex: 1;
+  width: 100%;
 }
 
 /* Blogpost divider (horizontal rule) */
@@ -275,7 +463,6 @@ ul.blog-list{
 .vert-divider{
   border-left: solid var(--fg);
   margin: 0 1rem;
-  /* height: 100vh; */
 }
 
 /* Audio tracks */
@@ -283,21 +470,16 @@ audio{
   width: 10rem;
 }
 
+/* Legacy blogpost styles - for backwards compatibility */
 .blogpost h1,
 .blogpost h3 {
   padding-left: 0.45rem;
 }
 
-.blogpost p,
-.content h2,
-.content h3,
-.content h4{
-  padding-left: 1rem;
-
-}
-
-.blog-header{
-  max-width: 45rem;
+.blogpost-layout .content h2,
+.blogpost-layout .content h3,
+.blogpost-layout .content h4{
+  padding-left: 0;
 }
 
 /* Social.astro; Apart of Footer */
@@ -329,33 +511,50 @@ audio{
 /* About me Button - REMOVED, now integrated into terminal */
 
 
-/* Image Content */
+/* Image Content - Blog sidebar images */
 .image-content{
   display: flex;
-  max-width: 40%;
   flex-direction: column;
   box-sizing: border-box;
-
-  position: absolute;
-  top: 15.3rem;
-  right: 0;
-
-  overflow: auto;
+  gap: 1rem;
 }
 
-@keyframes sweep{
-  to{
-    clip-path: inset(0 0 0);
-  }
+.image-content figure {
+  margin: 0;
 }
 
 .image-content figure img{
   max-width: 100%;
   height: auto;
   object-fit: cover;
-  clip-path: inset(0 100% 0 0);
-  animation: sweep 8s ease-in forwards;
-  animation-delay: 10s;
+  border: 2px solid var(--terminal-green);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.image-content figure img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+}
+
+[data-theme="light"] .image-content figure img:hover {
+  box-shadow: 0 0 10px rgba(45, 90, 39, 0.3);
+}
+
+/* Image captions */
+.image-content figcaption {
+  font-size: 0.8rem;
+  color: var(--fg-d);
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--ui-bg);
+  border: 1px solid var(--fg-d);
+  border-top: none;
+}
+
+.image-content figcaption::before {
+  content: "// ";
+  color: var(--terminal-green);
 }
 
 /* Homepage Content */

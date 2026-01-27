@@ -1,31 +1,15 @@
 ---
-
+// Simplified BlogTyping - no animation, just display content directly
+// Keeps the terminal aesthetic (> prefix on paragraphs, blinking cursor)
 ---
 
-<div class="typing-container">
-  <div id="typed-output" class="typed-output"></div>
-  <div id="hidden-html" style="display: none;">
-    <slot />
-  </div>
+<div class="blog-content-wrapper">
+  <slot />
 </div>
 
-<script type="module">
-  const speed = 1;
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const hidden = document.getElementById("hidden-html");
-    const output = document.getElementById("typed-output");
-
-    const content = hidden.innerHTML;
-    let i = 0;
-    function typeHTML() {
-      if (i < content.length) {
-        output.innerHTML = content.slice(0, i + 1);
-        i++;
-        setTimeout(typeHTML, speed);
-      }
-    }
-
-    typeHTML();
-  });
-</script>
+<style>
+  .blog-content-wrapper {
+    /* Content displays immediately - no typing animation */
+    opacity: 1;
+  }
+</style>

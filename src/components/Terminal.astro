@@ -22,7 +22,6 @@ const { blogs = [] } = Astro.props;
       <span class="terminal-btn maximize"></span>
     </div>
     <span class="terminal-title">icode4freedom@terminal ~ </span>
-    <button id="theme-toggle-btn" class="theme-toggle" title="Toggle theme">🌓</button>
   </div> 
   <div class="terminal-body">
     <div id="output">
@@ -43,8 +42,10 @@ const { blogs = [] } = Astro.props;
     </div>
     <div class="input-line">
       <span class="prompt">$ </span>
-      <input type="text" id="command-input" autocomplete="off" spellcheck="false">
-      <span class="cursor">_</span>
+      <span class="input-wrapper">
+        <input type="text" id="command-input" autocomplete="off" spellcheck="false">
+        <span class="cursor" id="cursor">_</span>
+      </span>
     </div>
   </div>
 </div>
@@ -97,29 +98,13 @@ const { blogs = [] } = Astro.props;
     }
   }
 
-  // Theme toggle functionality
-  function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }
-
+  // Theme toggle functionality (theme is initialized in BaseLayout)
   function toggleTheme() {
     const current = document.documentElement.getAttribute('data-theme') || 'dark';
     const newTheme = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
     return `Theme switched to ${newTheme} mode.`;
-  }
-
-  // Initialize theme on load
-  initTheme();
-
-  // Theme toggle button
-  const themeBtn = document.getElementById('theme-toggle-btn');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      toggleTheme();
-    });
   }
 
   const commands: Record<string, (args: string[]) => string | string[]> = {
@@ -457,7 +442,27 @@ const { blogs = [] } = Astro.props;
     }
   }
 
+  // Auto-resize input to fit content so cursor follows text
+  function resizeInput() {
+    if (input) {
+      // Create a temporary span to measure text width
+      const span = document.createElement('span');
+      span.style.visibility = 'hidden';
+      span.style.position = 'absolute';
+      span.style.whiteSpace = 'pre';
+      span.style.font = window.getComputedStyle(input).font;
+      span.textContent = input.value || '';
+      document.body.appendChild(span);
+      const width = span.offsetWidth;
+      document.body.removeChild(span);
+      input.style.width = Math.max(1, width) + 'px';
+    }
+  }
+
   if (input) {
+    input.addEventListener('input', resizeInput);
+    resizeInput(); // Initial size
+    
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         processCommand(input.value);
@@ -534,21 +539,6 @@ const { blogs = [] } = Astro.props;
     flex: 1;
   }
 
-  .theme-toggle {
-    background: transparent;
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 2px 8px;
-    cursor: pointer;
-    font-size: 14px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-  }
-
-  .theme-toggle:hover {
-    opacity: 1;
-  }
-
   .terminal-body {
     padding: 12px;
     height: 400px;
@@ -605,8 +595,16 @@ const { blogs = [] } = Astro.props;
 
   .prompt {
     color: var(--terminal-green);
-    margin-right: 8px;
+    margin-right: 4px;
     font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .input-wrapper {
+    display: inline-flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
   }
 
   #command-input {
@@ -615,14 +613,17 @@ const { blogs = [] } = Astro.props;
     color: var(--term-tc);
     font-family: var(--font-mono);
     font-size: 14px;
-    flex: 1;
     outline: none;
     caret-color: transparent;
+    width: auto;
+    min-width: 1px;
+    flex-shrink: 0;
   }
 
   .cursor {
     color: var(--terminal-green);
     animation: blink 1s steps(1) infinite;
+    flex-shrink: 0;
   }
 
   @keyframes blink {
