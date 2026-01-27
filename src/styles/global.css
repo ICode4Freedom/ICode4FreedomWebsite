@@ -320,12 +320,15 @@ body::before{
 
 /* Rest of Navbar + Footer.astro */
 
+.nav{
+  background-color: var(--ui-bg);
+}
+
 .nav ul, footer{
   list-style-type: none;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: var(--ui-bg);
 }
 
 main{
@@ -335,7 +338,6 @@ main{
 
 footer, .push{
   height: 1.875rem;
-  overflow: auto;
 }
 
 footer {
