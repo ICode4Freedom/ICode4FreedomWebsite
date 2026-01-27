@@ -1,42 +1,36 @@
 ---
-import SocialLink from "./SocialLink.astro"
-import ImageLink from "./ImageLink.astro"
+// Simple footer
 ---
 
 <footer>
-  <SocialLink platform='X' username='ICode4Freedom' name='X'/>
-  <ImageLink imgName='buymeacoffee' username='ICode4Freedom'/>
-  <a href="/rss.xml" class="rss-link" title="RSS Feed">📡 RSS</a>
-  <span class="follower-count">𝕏 164 followers</span>
+  <a href="https://x.com/ICode4Freedom" class="footer-link">𝕏</a>
+  <a href="https://buymeacoffee.com/ICode4Freedom" class="footer-link">☕</a>
+  <a href="/rss.xml" class="footer-link">RSS</a>
+  <span class="copyright">© 2025</span>
 </footer>
 
 <style>
   footer {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--ui-bg);
+    font-size: 0.85rem;
   }
 
-  .rss-link {
-    padding: 0.125rem 0.5rem;
+  .footer-link {
     color: var(--fg);
-    background-color: var(--ui-bg);
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
     text-decoration: none;
-    border-radius: 0.25rem;
-    transition: background-color 0.2s;
   }
 
-  .rss-link:hover {
-    background-color: var(--ui-accent);
-    color: #fff;
+  .footer-link:hover {
+    text-decoration: underline;
   }
 
-  .follower-count {
+  .copyright {
     margin-left: auto;
-    font-size: 0.8rem;
     color: var(--fg-d);
-    opacity: 0.8;
+    font-size: 0.75rem;
   }
 </style>

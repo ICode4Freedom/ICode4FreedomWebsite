@@ -208,18 +208,13 @@ const titleSlug = frontmatter.title
   }
   
   .tag {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    background: var(--ui-bg);
-    border: 1px solid var(--terminal-green);
-    color: var(--terminal-green);
+    font-size: 0.7rem;
+    color: var(--fg-d);
     font-family: var(--font-mono);
-    transition: all 0.2s;
   }
   
-  .tag:hover {
-    background: var(--terminal-green);
-    color: var(--bg);
+  .tag:not(:last-child)::after {
+    content: " ·";
   }
   
   /* Divider */

@@ -1,5 +1,5 @@
 ---
-// Related posts component - shows posts with matching tags
+// Related posts
 interface Post {
   url: string;
   title: string;
@@ -16,7 +16,6 @@ interface Props {
 
 const { currentUrl, currentTags, allPosts, maxPosts = 3 } = Astro.props;
 
-// Find related posts based on tag overlap
 const relatedPosts = allPosts
   .filter(post => post.url !== currentUrl)
   .map(post => ({
@@ -29,21 +28,12 @@ const relatedPosts = allPosts
 ---
 
 {relatedPosts.length > 0 && (
-  <div class="related-posts">
-    <h3 class="related-title">
-      <span class="hash">#</span> Related Posts
-    </h3>
+  <div class="related">
+    <h3 class="related-title">Related</h3>
     <ul class="related-list">
       {relatedPosts.map((post) => (
         <li>
-          <a href={post.url}>
-            <span class="post-title">{post.title}</span>
-            <span class="post-tags">
-              {post.tags.slice(0, 2).map(tag => (
-                <span class="tag">{tag}</span>
-              ))}
-            </span>
-          </a>
+          <a href={post.url}>{post.title}</a>
         </li>
       ))}
     </ul>
@@ -51,86 +41,36 @@ const relatedPosts = allPosts
 )}
 
 <style>
-  .related-posts {
-    margin: 2rem 0;
-    padding: 1.5rem;
-    border: 1px solid var(--fg-d);
-    background: var(--ui-bg);
+  .related {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--fg-d);
   }
   
   .related-title {
-    font-size: 1rem;
-    color: var(--fg);
-    margin: 0 0 1rem 0;
+    font-size: 0.85rem;
+    color: var(--fg-d);
+    margin: 0 0 0.75rem 0;
     font-weight: normal;
-  }
-  
-  .hash {
-    color: var(--terminal-green);
   }
   
   .related-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
   }
   
   .related-list li {
-    padding: 0;
-    margin: 0;
+    margin: 0.4rem 0;
   }
   
   .related-list a {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    text-decoration: none;
+    font-size: 0.9rem;
     color: var(--fg);
-    border-left: 2px solid transparent;
-    transition: all 0.2s;
+    text-decoration: none;
   }
   
   .related-list a:hover {
-    border-left-color: var(--terminal-green);
-    background: rgba(0, 255, 0, 0.05);
-    padding-left: 1rem;
-  }
-  
-  .post-title {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-right: 1rem;
-  }
-  
-  .post-tags {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }
-  
-  .tag {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.5rem;
-    background: var(--bg);
-    border: 1px solid var(--fg-d);
-    color: var(--fg-d);
-  }
-  
-  @media (max-width: 600px) {
-    .related-list a {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
-    }
-    
-    .post-title {
-      white-space: normal;
-    }
+    text-decoration: underline;
   }
 </style>

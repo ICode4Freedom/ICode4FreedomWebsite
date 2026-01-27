@@ -1,5 +1,5 @@
 ---
-// Author card component for blog posts
+// Author card component
 interface Props {
   name?: string;
 }
@@ -8,58 +8,23 @@ const { name = "Mike" } = Astro.props;
 ---
 
 <div class="author-card">
-  <div class="author-avatar">
-    <span class="avatar-icon">λ</span>
-  </div>
-  <div class="author-info">
-    <span class="author-label">Written by</span>
-    <span class="author-name">{name}</span>
-  </div>
+  <span class="label">by</span>
+  <span class="name">{name}</span>
 </div>
 
 <style>
   .author-card {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    border: 1px solid var(--fg-d);
-    border-left: 3px solid var(--terminal-green);
-    background: var(--ui-bg);
+    gap: 0.5rem;
+    font-size: 0.9rem;
   }
   
-  .author-avatar {
-    width: 50px;
-    height: 50px;
-    border: 2px solid var(--terminal-green);
-    border-radius: 4px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: var(--bg);
-  }
-  
-  .avatar-icon {
-    font-size: 1.8rem;
-    color: var(--terminal-green);
-    font-family: var(--font-mono);
-  }
-  
-  .author-info {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .author-label {
-    font-size: 0.75rem;
+  .label {
     color: var(--fg-d);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
   }
   
-  .author-name {
-    font-size: 1.1rem;
-    color: var(--terminal-green);
-    font-weight: bold;
+  .name {
+    color: var(--fg);
   }
 </style>

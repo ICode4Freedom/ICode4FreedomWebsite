@@ -1,5 +1,5 @@
 ---
-// Share on X (Twitter) button component
+// Share button
 interface Props {
   title: string;
   url?: string;
@@ -9,57 +9,35 @@ const { title, url } = Astro.props;
 ---
 
 <button class="share-btn" data-title={title} data-url={url || ''}>
-  <span class="share-icon">𝕏</span>
-  <span class="share-text">Share on X</span>
+  Share
 </button>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const shareBtn = document.querySelector('.share-btn');
+    const btn = document.querySelector('.share-btn');
+    if (!btn) return;
     
-    if (!shareBtn) return;
-    
-    shareBtn.addEventListener('click', () => {
-      const title = shareBtn.getAttribute('data-title') || document.title;
-      const url = shareBtn.getAttribute('data-url') || window.location.href;
-      
-      const tweetText = encodeURIComponent(`${title}`);
-      const tweetUrl = encodeURIComponent(url);
-      
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`;
-      
-      window.open(twitterUrl, '_blank', 'width=550,height=420');
+    btn.addEventListener('click', () => {
+      const title = btn.getAttribute('data-title') || document.title;
+      const url = btn.getAttribute('data-url') || window.location.href;
+      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+      window.open(tweetUrl, '_blank', 'width=550,height=420');
     });
   });
 </script>
 
 <style>
   .share-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    padding: 0.35rem 0.75rem;
     background: transparent;
-    border: 2px solid var(--terminal-green);
-    color: var(--terminal-green);
+    border: 1px solid var(--fg-d);
+    color: var(--fg);
     font-family: var(--font-mono);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     cursor: pointer;
-    transition: all 0.2s;
   }
   
   .share-btn:hover {
-    background: var(--terminal-green);
-    color: var(--bg);
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
-  }
-  
-  .share-icon {
-    font-size: 1.1rem;
-    font-weight: bold;
-  }
-  
-  [data-theme="light"] .share-btn:hover {
-    box-shadow: 0 0 8px rgba(45, 90, 39, 0.4);
+    border-color: var(--fg);
   }
 </style>
