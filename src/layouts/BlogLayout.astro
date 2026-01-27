@@ -5,7 +5,6 @@ import ImageGallery from "../components/ImageGallery.astro";
 import BlogTyping from "../scripts/BlogTyping.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import ImageLightbox from "../components/ImageLightbox.astro";
-import ShareButton from "../components/ShareButton.astro";
 
 const { frontmatter, url } = Astro.props;
 
@@ -106,29 +105,39 @@ const titleSlug = frontmatter.title
 
       <!-- Footer Section -->
       <footer class="blog-footer">
-        <div class="footer-nav">
-          {prevPost && (
-            <a href={prevPost.url} class="footer-btn">← Prev</a>
-          )}
-          <ShareButton title={frontmatter.title} />
-          {nextPost && (
-            <a href={nextPost.url} class="footer-btn">Next →</a>
-          )}
-        </div>
+        {prevPost ? (
+          <a href={prevPost.url} class="nav-btn">← Prev</a>
+        ) : (
+          <span class="nav-btn disabled">← Prev</span>
+        )}
         
-        <div class="footer-subscribe">
-          <p class="subscribe-text">Enjoyed this post? Get notified when I publish new ones.</p>
-          <form 
-            action="https://buttondown.com/api/emails/embed-subscribe/icode4freedom"
-            method="post"
-            target="popupwindow"
-            class="subscribe-form"
-          >
-            <input type="email" name="email" placeholder="your@email.com" required />
-            <button type="submit">Subscribe</button>
-          </form>
-        </div>
+        <button class="nav-btn" id="share-btn" data-title={frontmatter.title}>Share</button>
+        
+        <form 
+          action="https://buttondown.com/api/emails/embed-subscribe/icode4freedom"
+          method="post"
+          target="popupwindow"
+          class="subscribe-inline"
+        >
+          <input type="email" name="email" placeholder="email" required />
+          <button type="submit">Subscribe</button>
+        </form>
+        
+        {nextPost ? (
+          <a href={nextPost.url} class="nav-btn">Next →</a>
+        ) : (
+          <span class="nav-btn disabled">Next →</span>
+        )}
       </footer>
+      
+      <script>
+        document.getElementById('share-btn')?.addEventListener('click', () => {
+          const title = document.getElementById('share-btn')?.getAttribute('data-title') || document.title;
+          const url = window.location.href;
+          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+          window.open(twitterUrl, '_blank', 'width=550,height=420');
+        });
+      </script>
       
     </div>
   </article>
@@ -232,81 +241,76 @@ const titleSlug = frontmatter.title
     align-self: flex-start;
   }
   
-  /* Footer Styles */
+  /* Footer Styles - Single line */
   .blog-footer {
-    margin-top: 1rem;
-    padding: 1.5rem;
-    background: var(--ui-bg);
-    border: 1px solid var(--fg-d);
-    text-align: center;
-  }
-  
-  .footer-nav {
     display: flex;
+    align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    padding: 0.75rem;
+    background: var(--ui-bg);
+    border: 1px solid var(--fg-d);
   }
   
-  .footer-btn {
-    padding: 0.4rem 0.75rem;
+  .nav-btn {
+    padding: 0.4rem 0.6rem;
     background: var(--bg);
     border: 1px solid var(--fg-d);
     color: var(--fg);
     text-decoration: none;
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    cursor: pointer;
   }
   
-  .footer-btn:hover {
+  .nav-btn:hover:not(.disabled) {
     border-color: var(--fg);
   }
   
-  .footer-subscribe {
-    padding-top: 1rem;
-    border-top: 1px dashed var(--fg-d);
+  .nav-btn.disabled {
+    opacity: 0.4;
+    cursor: default;
   }
   
-  .subscribe-text {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.85rem;
-    color: var(--fg-d);
-  }
-  
-  .subscribe-form {
+  .subscribe-inline {
     display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    gap: 0.25rem;
   }
   
-  .subscribe-form input[type="email"] {
-    padding: 0.4rem 0.75rem;
+  .subscribe-inline input[type="email"] {
+    padding: 0.4rem 0.5rem;
     background: var(--bg);
     border: 1px solid var(--fg-d);
     color: var(--fg);
     font-family: var(--font-mono);
-    font-size: 0.8rem;
-    min-width: 200px;
+    font-size: 0.75rem;
+    width: 120px;
   }
   
-  .subscribe-form input[type="email"]:focus {
+  .subscribe-inline input[type="email"]:focus {
     outline: none;
     border-color: var(--terminal-green);
   }
   
-  .subscribe-form button {
-    padding: 0.4rem 0.75rem;
+  .subscribe-inline button {
+    padding: 0.4rem 0.5rem;
     background: var(--terminal-green);
     border: 1px solid var(--terminal-green);
     color: var(--bg);
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     cursor: pointer;
   }
   
-  .subscribe-form button:hover {
+  .subscribe-inline button:hover {
     opacity: 0.9;
+  }
+  
+  @media (max-width: 500px) {
+    .subscribe-inline input[type="email"] {
+      width: 100px;
+    }
   }
   
   /* Responsive */
