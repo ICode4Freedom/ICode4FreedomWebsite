@@ -1,0 +1,131 @@
+---
+// Previous/Next post navigation component
+interface Post {
+  url: string;
+  title: string;
+}
+
+interface Props {
+  prevPost?: Post | null;
+  nextPost?: Post | null;
+}
+
+const { prevPost, nextPost } = Astro.props;
+---
+
+<nav class="post-navigation">
+  <div class="nav-link prev">
+    {prevPost ? (
+      <a href={prevPost.url}>
+        <span class="nav-label">← Previous</span>
+        <span class="nav-title">{prevPost.title}</span>
+      </a>
+    ) : (
+      <span class="nav-empty">// start of archive</span>
+    )}
+  </div>
+  
+  <div class="nav-divider">|</div>
+  
+  <div class="nav-link next">
+    {nextPost ? (
+      <a href={nextPost.url}>
+        <span class="nav-label">Next →</span>
+        <span class="nav-title">{nextPost.title}</span>
+      </a>
+    ) : (
+      <span class="nav-empty">// end of archive</span>
+    )}
+  </div>
+</nav>
+
+<style>
+  .post-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1.5rem 0;
+    border-top: 1px dashed var(--fg-d);
+    border-bottom: 1px dashed var(--fg-d);
+    margin: 2rem 0;
+  }
+  
+  .nav-link {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .nav-link.prev {
+    text-align: left;
+  }
+  
+  .nav-link.next {
+    text-align: right;
+  }
+  
+  .nav-divider {
+    color: var(--fg-d);
+    display: flex;
+    align-items: center;
+  }
+  
+  .nav-link a {
+    text-decoration: none;
+    color: var(--fg);
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+  
+  .nav-link a:hover {
+    border-color: var(--terminal-green);
+    background: rgba(0, 255, 0, 0.05);
+  }
+  
+  .nav-label {
+    font-size: 0.75rem;
+    color: var(--terminal-green);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+  }
+  
+  .nav-title {
+    font-size: 0.9rem;
+    color: var(--fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+  }
+  
+  .nav-empty {
+    font-size: 0.8rem;
+    color: var(--fg-d);
+    font-style: italic;
+    padding: 0.5rem;
+  }
+  
+  @media (max-width: 600px) {
+    .post-navigation {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .nav-divider {
+      display: none;
+    }
+    
+    .nav-link.next {
+      text-align: left;
+    }
+    
+    .nav-title {
+      max-width: 100%;
+    }
+  }
+</style>
