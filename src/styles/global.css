@@ -325,7 +325,7 @@ body::before{
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: var(--ui-bg);
+  /* background-color: var(--ui-bg); */
 }
 
 main{
@@ -335,7 +335,6 @@ main{
 
 footer, .push{
   height: 1.875rem;
-  overflow: auto;
 }
 
 footer {
