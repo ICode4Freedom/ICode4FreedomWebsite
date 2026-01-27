@@ -17,11 +17,12 @@ const { blogs = [] } = Astro.props;
 <div class="terminal">
   <div class="terminal-header">
     <div class="terminal-buttons">
-      <span class="terminal-btn close"></span>
-      <span class="terminal-btn minimize"></span>
-      <span class="terminal-btn maximize"></span>
+      <span class="terminal-btn close" id="term-close" title="Close"></span>
+      <span class="terminal-btn minimize" id="term-minimize" title="Minimize"></span>
+      <span class="terminal-btn maximize" id="term-maximize" title="Maximize"></span>
     </div>
     <span class="terminal-title">icode4freedom@terminal ~ </span>
+    <span class="terminal-restore" id="term-restore" title="Restore">◻</span>
   </div> 
   <div class="terminal-body">
     <div id="output">
@@ -493,6 +494,52 @@ const { blogs = [] } = Astro.props;
 
   // Start typing animation after a short delay
   setTimeout(initTypingAnimation, 500);
+
+  // Terminal window controls
+  const terminal = document.querySelector('.terminal') as HTMLElement;
+  const termClose = document.getElementById('term-close');
+  const termMinimize = document.getElementById('term-minimize');
+  const termMaximize = document.getElementById('term-maximize');
+  const termRestore = document.getElementById('term-restore');
+
+  if (termClose && terminal) {
+    termClose.addEventListener('click', (e) => {
+      e.stopPropagation();
+      terminal.classList.add('closed');
+    });
+  }
+
+  if (termMinimize && terminal) {
+    termMinimize.addEventListener('click', (e) => {
+      e.stopPropagation();
+      terminal.classList.toggle('minimized');
+      terminal.classList.remove('maximized');
+    });
+  }
+
+  if (termMaximize && terminal) {
+    termMaximize.addEventListener('click', (e) => {
+      e.stopPropagation();
+      terminal.classList.toggle('maximized');
+      terminal.classList.remove('minimized');
+    });
+  }
+
+  if (termRestore && terminal) {
+    termRestore.addEventListener('click', (e) => {
+      e.stopPropagation();
+      terminal.classList.remove('closed', 'minimized', 'maximized');
+    });
+  }
+
+  // Double-click header to toggle maximize
+  const termHeader = document.querySelector('.terminal-header');
+  if (termHeader && terminal) {
+    termHeader.addEventListener('dblclick', () => {
+      terminal.classList.toggle('maximized');
+      terminal.classList.remove('minimized');
+    });
+  }
 </script>
 
 <style>
@@ -506,6 +553,30 @@ const { blogs = [] } = Astro.props;
     font-size: 14px;
     overflow: hidden;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+  }
+
+  /* Terminal states */
+  .terminal.closed {
+    display: none;
+  }
+
+  .terminal.minimized .terminal-body {
+    display: none;
+  }
+
+  .terminal.minimized {
+    max-width: 300px;
+  }
+
+  .terminal.maximized {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .terminal.maximized .terminal-body {
+    height: 70vh;
   }
 
   .terminal-header {
@@ -532,6 +603,28 @@ const { blogs = [] } = Astro.props;
   .terminal-btn.close { background: #ff5f56; }
   .terminal-btn.minimize { background: #ffbd2e; }
   .terminal-btn.maximize { background: #27ca40; }
+
+  .terminal-btn:hover {
+    transform: scale(1.2);
+    filter: brightness(1.1);
+  }
+
+  .terminal-restore {
+    display: none;
+    color: #999;
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: auto;
+  }
+
+  .terminal-restore:hover {
+    color: #fff;
+  }
+
+  .terminal.minimized .terminal-restore,
+  .terminal.maximized .terminal-restore {
+    display: block;
+  }
 
   .terminal-title {
     color: #999;

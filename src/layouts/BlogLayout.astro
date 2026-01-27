@@ -5,7 +5,6 @@ import ImageGallery from "../components/ImageGallery.astro";
 import BlogTyping from "../scripts/BlogTyping.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import ImageLightbox from "../components/ImageLightbox.astro";
-import ShareButton from "../components/ShareButton.astro";
 
 const { frontmatter, url } = Astro.props;
 
@@ -102,20 +101,41 @@ const titleSlug = frontmatter.title
         )}
       </div>
 
-      <hr class="divider" />
-
       <!-- Footer Section -->
       <footer class="blog-footer">
-        <div class="footer-buttons">
-          {prevPost && (
-            <a href={prevPost.url} class="footer-btn">← Prev</a>
+        <div class="footer-nav">
+          {prevPost ? (
+            <a href={prevPost.url} class="nav-btn">← Prev</a>
+          ) : (
+            <span class="nav-btn disabled">← Prev</span>
           )}
-          <ShareButton title={frontmatter.title} />
-          {nextPost && (
-            <a href={nextPost.url} class="footer-btn">Next →</a>
+          <button class="nav-btn" id="share-btn" data-title={frontmatter.title}>Share</button>
+          {nextPost ? (
+            <a href={nextPost.url} class="nav-btn">Next →</a>
+          ) : (
+            <span class="nav-btn disabled">Next →</span>
           )}
         </div>
+        
+        <form 
+          action="https://buttondown.com/api/emails/embed-subscribe/icode4freedom"
+          method="post"
+          target="popupwindow"
+          class="subscribe-inline"
+        >
+          <input type="email" name="email" placeholder="your@email.com" required />
+          <button type="submit">Subscribe</button>
+        </form>
       </footer>
+      
+      <script>
+        document.getElementById('share-btn')?.addEventListener('click', () => {
+          const title = document.getElementById('share-btn')?.getAttribute('data-title') || document.title;
+          const url = window.location.href;
+          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+          window.open(twitterUrl, '_blank', 'width=550,height=420');
+        });
+      </script>
       
     </div>
   </article>
@@ -221,27 +241,94 @@ const titleSlug = frontmatter.title
   
   /* Footer Styles */
   .blog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem 0;
     margin-top: 1rem;
+    border-top: 1px solid var(--fg-d);
   }
   
-  .footer-buttons {
+  .footer-nav {
     display: flex;
-    justify-content: center;
     gap: 0.5rem;
   }
   
-  .footer-btn {
-    padding: 0.4rem 0.75rem;
-    background: var(--bg);
+  .nav-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
     border: 1px solid var(--fg-d);
+    border-radius: 4px;
     color: var(--fg);
     text-decoration: none;
     font-family: var(--font-mono);
     font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
   }
   
-  .footer-btn:hover {
-    border-color: var(--fg);
+  .nav-btn:hover:not(.disabled) {
+    border-color: var(--terminal-green);
+    color: var(--terminal-green);
+  }
+  
+  .nav-btn.disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+  
+  .subscribe-inline {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .subscribe-inline input[type="email"] {
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: 1px solid var(--fg-d);
+    border-radius: 4px;
+    color: var(--fg);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    width: 160px;
+    transition: border-color 0.2s;
+  }
+  
+  .subscribe-inline input[type="email"]::placeholder {
+    color: var(--fg-d);
+  }
+  
+  .subscribe-inline input[type="email"]:focus {
+    outline: none;
+    border-color: var(--terminal-green);
+  }
+  
+  .subscribe-inline button {
+    padding: 0.5rem 1rem;
+    background: var(--terminal-green);
+    border: none;
+    border-radius: 4px;
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .subscribe-inline button:hover {
+    opacity: 0.85;
+  }
+  
+  @media (max-width: 600px) {
+    .blog-footer {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .subscribe-inline input[type="email"] {
+      width: 140px;
+    }
   }
   
   /* Responsive */
