@@ -6,19 +6,15 @@ import BlogTyping from "../scripts/BlogTyping.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import ImageLightbox from "../components/ImageLightbox.astro";
 import ShareButton from "../components/ShareButton.astro";
-import AuthorCard from "../components/AuthorCard.astro";
-import PostNavigation from "../components/PostNavigation.astro";
-import RelatedPosts from "../components/RelatedPosts.astro";
 
 const { frontmatter, url } = Astro.props;
 
 // Check if this is a blog post (has pubDate and tags) or a standalone page
 const isBlogPost = !!frontmatter.pubDate && url?.includes('/blogs/');
 
-// Get all posts for navigation and related posts (only for blog posts)
+// Get prev/next posts for navigation
 let prevPost = null;
 let nextPost = null;
-let postsForRelated: any[] = [];
 
 if (isBlogPost) {
   const allPostsRaw = Object.values(import.meta.glob('../pages/blogs/*.md', { eager: true }));
@@ -26,24 +22,13 @@ if (isBlogPost) {
     .filter((post: any) => post.rawContent && post.rawContent().trim().length > 0)
     .sort((a: any, b: any) => new Date(b.frontmatter.pubDate).getTime() - new Date(a.frontmatter.pubDate).getTime());
 
-  // Find current post index and get prev/next
   const currentIndex = allPosts.findIndex((post: any) => post.url === url);
   prevPost = currentIndex >= 0 && currentIndex < allPosts.length - 1 ? {
     url: (allPosts[currentIndex + 1] as any).url,
-    title: (allPosts[currentIndex + 1] as any).frontmatter.title
   } : null;
   nextPost = currentIndex > 0 ? {
     url: (allPosts[currentIndex - 1] as any).url,
-    title: (allPosts[currentIndex - 1] as any).frontmatter.title
   } : null;
-
-  // Format posts for RelatedPosts component
-  postsForRelated = allPosts.map((post: any) => ({
-    url: post.url,
-    title: post.frontmatter.title,
-    tags: post.frontmatter.tags || [],
-    pubDate: post.frontmatter.pubDate
-  }));
 }
 
 // Format date nicely (only if pubDate exists)
@@ -121,25 +106,15 @@ const titleSlug = frontmatter.title
 
       <!-- Footer Section -->
       <footer class="blog-footer">
-        <div class="footer-top">
-          <AuthorCard name="Mike" />
-          <div class="share-section">
-            <ShareButton title={frontmatter.title} />
-          </div>
+        <div class="footer-buttons">
+          {prevPost && (
+            <a href={prevPost.url} class="footer-btn">← Prev</a>
+          )}
+          <ShareButton title={frontmatter.title} />
+          {nextPost && (
+            <a href={nextPost.url} class="footer-btn">Next →</a>
+          )}
         </div>
-        
-        {isBlogPost && (
-          <>
-            <PostNavigation prevPost={prevPost} nextPost={nextPost} />
-            
-            <RelatedPosts 
-              currentUrl={url} 
-              currentTags={frontmatter.tags || []} 
-              allPosts={postsForRelated}
-              maxPosts={3}
-            />
-          </>
-        )}
       </footer>
       
     </div>
@@ -246,21 +221,27 @@ const titleSlug = frontmatter.title
   
   /* Footer Styles */
   .blog-footer {
-    margin-top: 2rem;
+    margin-top: 1rem;
   }
   
-  .footer-top {
+  .footer-buttons {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .share-section {
-    display: flex;
+    justify-content: center;
     gap: 0.5rem;
+  }
+  
+  .footer-btn {
+    padding: 0.4rem 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--fg-d);
+    color: var(--fg);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+  
+  .footer-btn:hover {
+    border-color: var(--fg);
   }
   
   /* Responsive */
@@ -279,11 +260,6 @@ const titleSlug = frontmatter.title
   @media (max-width: 600px) {
     .blog-container {
       padding: 0 1rem;
-    }
-    
-    .footer-top {
-      flex-direction: column;
-      align-items: flex-start;
     }
   }
 </style>
