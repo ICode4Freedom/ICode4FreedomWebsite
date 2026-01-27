@@ -1,36 +1,33 @@
 ---
-// Simple footer
+// Simple footer with buttons
 ---
 
 <footer>
-  <a href="https://x.com/ICode4Freedom" class="footer-link">𝕏</a>
-  <a href="https://buymeacoffee.com/ICode4Freedom" class="footer-link">☕</a>
-  <a href="/rss.xml" class="footer-link">RSS</a>
-  <span class="copyright">© 2025</span>
+  <a href="https://x.com/ICode4Freedom" class="btn">𝕏</a>
+  <a href="https://buymeacoffee.com/ICode4Freedom" class="btn">☕</a>
+  <a href="/rss.xml" class="btn">RSS</a>
 </footer>
 
 <style>
   footer {
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 1rem;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
     background: var(--ui-bg);
-    font-size: 0.85rem;
   }
 
-  .footer-link {
+  .btn {
+    padding: 0.4rem 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--fg-d);
     color: var(--fg);
     text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
   }
 
-  .footer-link:hover {
-    text-decoration: underline;
-  }
-
-  .copyright {
-    margin-left: auto;
-    color: var(--fg-d);
-    font-size: 0.75rem;
+  .btn:hover {
+    border-color: var(--fg);
   }
 </style>

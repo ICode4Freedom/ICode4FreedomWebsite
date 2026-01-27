@@ -320,7 +320,7 @@ body::before{
 
 /* Rest of Navbar + Footer.astro */
 
-.nav ul, footer{
+.nav ul{
   list-style-type: none;
   margin: 0;
   padding: 0;
@@ -331,18 +331,6 @@ body::before{
 main{
   min-height: 100vh;
   flex-grow: 1;
-}
-
-footer, .push{
-  height: 1.875rem;
-  overflow: auto;
-}
-
-footer {
-  padding: 0.875rem 1rem;
-  display: flex;
-  justify-content: left;
-  gap: 0.5rem;
 }
 
 /* Blogs List + Blog Components on Home Page */
