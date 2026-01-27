@@ -106,7 +106,7 @@ const titleSlug = frontmatter.title
 
       <!-- Footer Section -->
       <footer class="blog-footer">
-        <div class="footer-buttons">
+        <div class="footer-nav">
           {prevPost && (
             <a href={prevPost.url} class="footer-btn">← Prev</a>
           )}
@@ -114,6 +114,19 @@ const titleSlug = frontmatter.title
           {nextPost && (
             <a href={nextPost.url} class="footer-btn">Next →</a>
           )}
+        </div>
+        
+        <div class="footer-subscribe">
+          <p class="subscribe-text">Enjoyed this post? Get notified when I publish new ones.</p>
+          <form 
+            action="https://buttondown.com/api/emails/embed-subscribe/icode4freedom"
+            method="post"
+            target="popupwindow"
+            class="subscribe-form"
+          >
+            <input type="email" name="email" placeholder="your@email.com" required />
+            <button type="submit">Subscribe</button>
+          </form>
         </div>
       </footer>
       
@@ -222,12 +235,17 @@ const titleSlug = frontmatter.title
   /* Footer Styles */
   .blog-footer {
     margin-top: 1rem;
+    padding: 1.5rem;
+    background: var(--ui-bg);
+    border: 1px solid var(--fg-d);
+    text-align: center;
   }
   
-  .footer-buttons {
+  .footer-nav {
     display: flex;
     justify-content: center;
     gap: 0.5rem;
+    margin-bottom: 1.5rem;
   }
   
   .footer-btn {
@@ -242,6 +260,53 @@ const titleSlug = frontmatter.title
   
   .footer-btn:hover {
     border-color: var(--fg);
+  }
+  
+  .footer-subscribe {
+    padding-top: 1rem;
+    border-top: 1px dashed var(--fg-d);
+  }
+  
+  .subscribe-text {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.85rem;
+    color: var(--fg-d);
+  }
+  
+  .subscribe-form {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .subscribe-form input[type="email"] {
+    padding: 0.4rem 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--fg-d);
+    color: var(--fg);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    min-width: 200px;
+  }
+  
+  .subscribe-form input[type="email"]:focus {
+    outline: none;
+    border-color: var(--terminal-green);
+  }
+  
+  .subscribe-form button {
+    padding: 0.4rem 0.75rem;
+    background: var(--terminal-green);
+    border: 1px solid var(--terminal-green);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  
+  .subscribe-form button:hover {
+    opacity: 0.9;
   }
   
   /* Responsive */
