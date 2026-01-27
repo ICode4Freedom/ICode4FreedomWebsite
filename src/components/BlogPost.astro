@@ -12,6 +12,13 @@ interface Props {
 }
 
 const { url, title, description, pubDate, tags = [], featured = false, image } = Astro.props;
+
+// Format date consistently with BlogLayout
+const formattedDate = new Date(pubDate).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
 ---
 
 <li class:list={["blogpost", { featured }]}>
@@ -26,7 +33,7 @@ const { url, title, description, pubDate, tags = [], featured = false, image } =
         <a class="title-link" href={url}>{title}</a>
         {featured && <span class="new-badge">New</span>}
       </div>
-      <p class="pub-date">{pubDate.toString().slice(0, 10)}</p>
+      <p class="pub-date">{formattedDate}</p>
       <p class="description">{description}</p>
     </div>
   </div>
