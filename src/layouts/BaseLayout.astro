@@ -13,6 +13,7 @@ interface Props {
   article?: boolean;
   publishedTime?: string;
   tags?: string[];
+  author?: string;
 }
 
 const {
@@ -21,7 +22,8 @@ const {
   image = "/og-default.png",
   article = false,
   publishedTime,
-  tags = []
+  tags = [],
+  author = "Mike"
 } = Astro.props;
 
 const siteTitle = "ICode4Freedom";
@@ -30,6 +32,68 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const ogImageURL = new URL(image, Astro.site);
 
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
+
+// JSON-LD Structured Data
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": siteTitle,
+  "url": Astro.site,
+  "description": "Building in public. Learning out loud. A blog about technology, philosophy, and life lessons.",
+  "author": {
+    "@type": "Person",
+    "name": "Mike",
+    "url": "https://icode4freedom.com/about"
+  }
+};
+
+const articleSchema = article ? {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": title,
+  "description": description,
+  "image": ogImageURL.toString(),
+  "datePublished": publishedTime,
+  "author": {
+    "@type": "Person",
+    "name": author,
+    "url": "https://icode4freedom.com/about"
+  },
+  "publisher": {
+    "@type": "Person",
+    "name": "Mike",
+    "url": "https://icode4freedom.com"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": canonicalURL.toString()
+  },
+  "keywords": tags.join(", ")
+} : null;
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": Astro.site?.toString()
+    },
+    ...(article ? [{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": `${Astro.site}blogs/`
+    }, {
+      "@type": "ListItem",
+      "position": 3,
+      "name": title,
+      "item": canonicalURL.toString()
+    }] : [])
+  ]
+};
 ---
 
 <html lang="en">
@@ -64,6 +128,31 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
     
     <!-- RSS -->
     <link rel="alternate" type="application/rss+xml" title={siteTitle} href="/rss.xml" />
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+    {article && articleSchema && (
+      <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+    )}
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+    
+    <!-- Prefetch on hover for faster navigation -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const prefetched = new Set();
+        document.body.addEventListener('mouseover', (e) => {
+          const link = (e.target as HTMLElement).closest('a');
+          if (!link) return;
+          const href = link.getAttribute('href');
+          if (!href || prefetched.has(href) || href.startsWith('#') || href.startsWith('http')) return;
+          prefetched.add(href);
+          const prefetchLink = document.createElement('link');
+          prefetchLink.rel = 'prefetch';
+          prefetchLink.href = href;
+          document.head.appendChild(prefetchLink);
+        });
+      });
+    </script>
     
     <script is:inline define:vars={{ supabaseAnonKey }}>
       // Initialize theme immediately to prevent flash

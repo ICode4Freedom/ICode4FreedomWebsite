@@ -1,4 +1,8 @@
 import rss from '@astrojs/rss';
+import sanitizeHtml from 'sanitize-html';
+import MarkdownIt from 'markdown-it';
+
+const parser = new MarkdownIt();
 
 export async function GET(context) {
   // Import all blog posts
@@ -19,6 +23,10 @@ export async function GET(context) {
       description: post.frontmatter.description,
       link: post.url,
       categories: post.frontmatter.tags || [],
+      // Full content for RSS readers
+      content: sanitizeHtml(parser.render(post.rawContent()), {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+      }),
     })),
     customData: `<language>en-us</language>`,
   });

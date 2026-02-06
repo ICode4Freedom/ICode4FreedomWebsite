@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/BlogLayout.astro
 title: "What I'm Doing Now"
-pubDate: 2025-01-20
+pubDate: 2026-02-06
 description: "A snapshot of what I'm currently focused on"
 author: "ICode4Freedom - Mike"
 tags: ["now", "personal"]
@@ -9,7 +9,7 @@ tags: ["now", "personal"]
 
 # What I'm Doing Now
 
-*Last updated: January 2025*
+*Last updated: February 2026*
 
 This is my [/now page](https://nownownow.com/about) — a snapshot of what I'm currently focused on.
 

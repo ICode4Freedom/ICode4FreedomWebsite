@@ -150,7 +150,7 @@ const ogImage = frontmatter.image || `/og/${titleSlug}.png`;
           ) : (
             <span class="nav-btn disabled">← Prev</span>
           )}
-          <button class="nav-btn" id="share-btn" data-title={frontmatter.title}>Share</button>
+          <button class="nav-btn" id="share-btn" data-title={frontmatter.title} data-description={frontmatter.description}>Share</button>
           {nextPost ? (
             <a href={nextPost.url} class="nav-btn">Next →</a>
           ) : (
@@ -171,9 +171,15 @@ const ogImage = frontmatter.image || `/og/${titleSlug}.png`;
       
       <script>
         document.getElementById('share-btn')?.addEventListener('click', () => {
-          const title = document.getElementById('share-btn')?.getAttribute('data-title') || document.title;
+          const btn = document.getElementById('share-btn');
+          const title = btn?.getAttribute('data-title') || document.title;
+          const desc = btn?.getAttribute('data-description') || '';
           const url = window.location.href;
-          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+          
+          // Create engaging share text
+          const shareText = `📖 "${title}"\n\n${desc}\n\nRead it here:`;
+          
+          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(url)}&via=ICode4Freedom`;
           window.open(twitterUrl, '_blank', 'width=550,height=420');
         });
       </script>

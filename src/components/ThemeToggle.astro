@@ -43,16 +43,24 @@
     top: 0.75rem;
     right: 1rem;
     z-index: 1000;
-    background: transparent;
-    border: none;
+    background: var(--ui-bg);
+    border: 1px solid var(--fg-d);
+    border-radius: 4px;
     color: var(--fg);
     font-size: 1.25rem;
     cursor: pointer;
-    padding: 0.25rem;
+    padding: 0.4rem 0.6rem;
     line-height: 1;
+    transition: all 0.2s ease;
   }
 
   .theme-toggle:hover {
-    opacity: 0.7;
+    border-color: var(--terminal-green);
+    color: var(--terminal-green);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+  }
+
+  [data-theme="light"] .theme-toggle:hover {
+    box-shadow: 0 0 8px rgba(107, 83, 68, 0.3);
   }
 </style>
