@@ -5,15 +5,22 @@ import ImageGallery from "../components/ImageGallery.astro";
 import BlogTyping from "../scripts/BlogTyping.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import ImageLightbox from "../components/ImageLightbox.astro";
+import RelatedPosts from "../components/RelatedPosts.astro";
 
-const { frontmatter, url } = Astro.props;
+const { frontmatter, url, rawContent } = Astro.props;
 
 // Check if this is a blog post (has pubDate and tags) or a standalone page
 const isBlogPost = !!frontmatter.pubDate && url?.includes('/blogs/');
 
-// Get prev/next posts for navigation
+// Calculate reading time (avg 200 words per minute)
+const content = rawContent ? rawContent() : '';
+const wordCount = content.split(/\s+/).filter((word: string) => word.length > 0).length;
+const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+// Get prev/next posts for navigation and related posts
 let prevPost = null;
 let nextPost = null;
+let allPostsForRelated: any[] = [];
 
 if (isBlogPost) {
   const allPostsRaw = Object.values(import.meta.glob('../pages/blogs/*.md', { eager: true }));
@@ -28,6 +35,14 @@ if (isBlogPost) {
   nextPost = currentIndex > 0 ? {
     url: (allPosts[currentIndex - 1] as any).url,
   } : null;
+
+  // Prepare posts for RelatedPosts component
+  allPostsForRelated = allPosts.map((post: any) => ({
+    url: post.url,
+    title: post.frontmatter.title,
+    tags: post.frontmatter.tags || [],
+    pubDate: post.frontmatter.pubDate
+  }));
 }
 
 // Format date nicely (only if pubDate exists)
@@ -48,9 +63,19 @@ const titleSlug = frontmatter.title
   .toLowerCase()
   .replace(/[^a-z0-9]+/g, '-')
   .replace(/(^-|-$)/g, '');
+
+// OG Image: use post image or generate path
+const ogImage = frontmatter.image || `/og/${titleSlug}.png`;
 ---
 
-<BaseLayout>
+<BaseLayout 
+  title={frontmatter.title}
+  description={frontmatter.description}
+  image={ogImage}
+  article={isBlogPost}
+  publishedTime={pubDateISO}
+  tags={frontmatter.tags}
+>
   <ReadingProgress />
   <ImageLightbox />
   
@@ -70,6 +95,12 @@ const titleSlug = frontmatter.title
             <time class="date" datetime={pubDateISO}>
               <span class="date-label">posted:</span> {formattedDate}
             </time>
+          )}
+          
+          {isBlogPost && (
+            <span class="reading-time">
+              <span class="reading-label">read:</span> {readingTime} min
+            </span>
           )}
           
           {frontmatter.trackName && <AudioTrack />}
@@ -100,6 +131,16 @@ const titleSlug = frontmatter.title
           </aside>
         )}
       </div>
+
+      <!-- Related Posts -->
+      {isBlogPost && frontmatter.tags && frontmatter.tags.length > 0 && (
+        <RelatedPosts 
+          currentUrl={url} 
+          currentTags={frontmatter.tags} 
+          allPosts={allPostsForRelated}
+          maxPosts={3}
+        />
+      )}
 
       <!-- Footer Section -->
       <footer class="blog-footer">
@@ -192,8 +233,14 @@ const titleSlug = frontmatter.title
     color: var(--fg-d);
   }
   
-  .date-label {
+  .date-label,
+  .reading-label {
     color: var(--terminal-green);
+  }
+  
+  .reading-time {
+    font-size: 0.9rem;
+    color: var(--fg-d);
   }
   
   .tags {

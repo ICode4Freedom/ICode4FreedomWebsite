@@ -663,6 +663,13 @@ const { blogs = [] } = Astro.props;
     white-space: pre;
   }
 
+  /* Hide ASCII art on mobile for better UX */
+  @media (max-width: 600px) {
+    .output-line.ascii-art {
+      display: none;
+    }
+  }
+
   @media (min-width: 900px) {
     .output-line.ascii-art {
       font-size: 9px;
