@@ -18,5 +18,8 @@
     "@vercel/analytics": "^1.6.1",
     "astro": "^5.7.10",
     "preact": "^10.26.6"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
   }
 }
