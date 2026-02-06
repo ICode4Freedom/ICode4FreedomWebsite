@@ -1,0 +1,609 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout>
+  <div class="admin-container">
+    <div id="auth-section" class="auth-section">
+      <div class="auth-box">
+        <h1>🔐 Admin Login</h1>
+        <p>Sign in to view analytics</p>
+        
+        <form id="login-form" class="login-form">
+          <input type="email" id="email" placeholder="Email" required />
+          <input type="password" id="password" placeholder="Password" required />
+          <button type="submit">Sign In</button>
+        </form>
+        
+        <p class="auth-error" id="auth-error"></p>
+      </div>
+    </div>
+
+    <div id="dashboard-section" class="dashboard-section" style="display: none;">
+      <header class="dashboard-header">
+        <h1>📊 Blog Analytics</h1>
+        <div class="header-actions">
+          <select id="date-range">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="all">All time</option>
+          </select>
+          <button id="refresh-btn">↻ Refresh</button>
+          <button id="logout-btn">Logout</button>
+        </div>
+      </header>
+
+      <div class="stats-overview">
+        <div class="stat-card">
+          <span class="stat-label">Total Views</span>
+          <span class="stat-value" id="total-views">-</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Unique Visitors</span>
+          <span class="stat-value" id="unique-visitors">-</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Avg. Time on Page</span>
+          <span class="stat-value" id="avg-time">-</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Avg. Read Depth</span>
+          <span class="stat-value" id="avg-scroll">-</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Bounce Rate</span>
+          <span class="stat-value" id="bounce-rate">-</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Shares</span>
+          <span class="stat-value" id="total-shares">-</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Subscribes</span>
+          <span class="stat-value" id="total-subscribes">-</span>
+        </div>
+      </div>
+
+      <section class="posts-section">
+        <h2>📝 Posts Performance</h2>
+        <div class="posts-table-wrapper">
+          <table class="posts-table" id="posts-table">
+            <thead>
+              <tr>
+                <th>Post</th>
+                <th>Views</th>
+                <th>Unique</th>
+                <th>Avg Time</th>
+                <th>Read %</th>
+                <th>Bounce</th>
+                <th>Shares</th>
+              </tr>
+            </thead>
+            <tbody id="posts-tbody">
+              <tr><td colspan="7" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="referrers-section">
+        <h2>🔗 Top Referrers</h2>
+        <ul id="referrers-list" class="referrers-list">
+          <li class="loading">Loading...</li>
+        </ul>
+      </section>
+
+      <section class="recent-section">
+        <h2>🕐 Recent Visitors</h2>
+        <ul id="recent-list" class="recent-list">
+          <li class="loading">Loading...</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const SUPABASE_URL = 'https://kfggnsmgpuakjzrhzkwp.supabase.co';
+  const SUPABASE_ANON_KEY = (window as any).__SUPABASE_ANON_KEY || '';
+
+  let accessToken: string | null = null;
+
+  // Check for existing session
+  async function checkSession() {
+    const stored = localStorage.getItem('sb-session');
+    if (stored) {
+      try {
+        const session = JSON.parse(stored);
+        if (session.access_token && session.expires_at > Date.now() / 1000) {
+          accessToken = session.access_token;
+          showDashboard();
+          loadAnalytics();
+          return;
+        }
+      } catch {}
+    }
+    showLogin();
+  }
+
+  function showLogin() {
+    document.getElementById('auth-section')!.style.display = 'flex';
+    document.getElementById('dashboard-section')!.style.display = 'none';
+  }
+
+  function showDashboard() {
+    document.getElementById('auth-section')!.style.display = 'none';
+    document.getElementById('dashboard-section')!.style.display = 'block';
+  }
+
+  // Login handler
+  document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const errorEl = document.getElementById('auth-error')!;
+
+    try {
+      const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error_description || err.msg || 'Login failed');
+      }
+
+      const data = await response.json();
+      accessToken = data.access_token;
+      
+      localStorage.setItem('sb-session', JSON.stringify({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: Math.floor(Date.now() / 1000) + data.expires_in
+      }));
+
+      showDashboard();
+      loadAnalytics();
+    } catch (err: any) {
+      errorEl.textContent = err.message;
+    }
+  });
+
+  // Logout handler
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
+    localStorage.removeItem('sb-session');
+    accessToken = null;
+    showLogin();
+  });
+
+  // Refresh handler
+  document.getElementById('refresh-btn')?.addEventListener('click', () => {
+    loadAnalytics();
+  });
+
+  // Date range handler
+  document.getElementById('date-range')?.addEventListener('change', () => {
+    loadAnalytics();
+  });
+
+  async function supabaseQuery(table: string, query = ''): Promise<any[]> {
+    if (!accessToken) return [];
+    
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Query failed');
+      return await response.json();
+    } catch (err) {
+      console.error('Query error:', err);
+      return [];
+    }
+  }
+
+  async function loadAnalytics() {
+    const dateRange = (document.getElementById('date-range') as HTMLSelectElement).value;
+    const daysAgo = dateRange === 'all' ? 365 * 10 : parseInt(dateRange);
+    const startDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+
+    // Fetch all data in parallel
+    const [pageViews, engagement, events] = await Promise.all([
+      supabaseQuery('page_views', `?created_at=gte.${startDate}&select=*`),
+      supabaseQuery('page_engagement', `?created_at=gte.${startDate}&select=*`),
+      supabaseQuery('analytics_events', `?created_at=gte.${startDate}&select=*`)
+    ]);
+
+    // Calculate overview stats
+    const uniqueVisitors = new Set(pageViews.map(v => v.visitor_id)).size;
+    const avgTime = engagement.length > 0 
+      ? Math.round(engagement.reduce((sum, e) => sum + (e.time_on_page || 0), 0) / engagement.length)
+      : 0;
+    const avgScroll = engagement.length > 0
+      ? Math.round(engagement.reduce((sum, e) => sum + (e.max_scroll_depth || 0), 0) / engagement.length)
+      : 0;
+    const bounced = engagement.filter(e => e.bounced).length;
+    const bounceRate = engagement.length > 0 ? Math.round((bounced / engagement.length) * 100) : 0;
+    const shares = events.filter(e => e.event_type === 'share').length;
+    const subscribes = events.filter(e => e.event_type === 'subscribe').length;
+
+    // Update overview cards
+    document.getElementById('total-views')!.textContent = pageViews.length.toLocaleString();
+    document.getElementById('unique-visitors')!.textContent = uniqueVisitors.toLocaleString();
+    document.getElementById('avg-time')!.textContent = formatTime(avgTime);
+    document.getElementById('avg-scroll')!.textContent = `${avgScroll}%`;
+    document.getElementById('bounce-rate')!.textContent = `${bounceRate}%`;
+    document.getElementById('total-shares')!.textContent = shares.toLocaleString();
+    document.getElementById('total-subscribes')!.textContent = subscribes.toLocaleString();
+
+    // Calculate per-post stats
+    const postStats = new Map<string, {
+      views: number;
+      unique: Set<string>;
+      totalTime: number;
+      totalScroll: number;
+      bounces: number;
+      shares: number;
+      engagementCount: number;
+    }>();
+
+    pageViews.forEach(pv => {
+      if (!pv.page_path.includes('/blogs/')) return;
+      
+      if (!postStats.has(pv.page_path)) {
+        postStats.set(pv.page_path, {
+          views: 0,
+          unique: new Set(),
+          totalTime: 0,
+          totalScroll: 0,
+          bounces: 0,
+          shares: 0,
+          engagementCount: 0
+        });
+      }
+      
+      const stats = postStats.get(pv.page_path)!;
+      stats.views++;
+      stats.unique.add(pv.visitor_id);
+    });
+
+    engagement.forEach(e => {
+      if (!postStats.has(e.page_path)) return;
+      const stats = postStats.get(e.page_path)!;
+      stats.totalTime += e.time_on_page || 0;
+      stats.totalScroll += e.max_scroll_depth || 0;
+      if (e.bounced) stats.bounces++;
+      stats.engagementCount++;
+    });
+
+    events.forEach(e => {
+      if (!postStats.has(e.page_path)) return;
+      if (e.event_type === 'share') {
+        postStats.get(e.page_path)!.shares++;
+      }
+    });
+
+    // Render posts table
+    const tbody = document.getElementById('posts-tbody')!;
+    if (postStats.size === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No blog data yet</td></tr>';
+    } else {
+      const sortedPosts = Array.from(postStats.entries()).sort((a, b) => b[1].views - a[1].views);
+      tbody.innerHTML = sortedPosts.map(([path, stats]) => {
+        const avgPostTime = stats.engagementCount > 0 ? Math.round(stats.totalTime / stats.engagementCount) : 0;
+        const avgPostScroll = stats.engagementCount > 0 ? Math.round(stats.totalScroll / stats.engagementCount) : 0;
+        const postBounce = stats.engagementCount > 0 ? Math.round((stats.bounces / stats.engagementCount) * 100) : 0;
+        const postName = path.replace('/blogs/', 'Blog #');
+        
+        return `
+          <tr>
+            <td><a href="${path}" target="_blank">${postName}</a></td>
+            <td>${stats.views}</td>
+            <td>${stats.unique.size}</td>
+            <td>${formatTime(avgPostTime)}</td>
+            <td>${avgPostScroll}%</td>
+            <td>${postBounce}%</td>
+            <td>${stats.shares}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Render referrers
+    const referrerCounts = new Map<string, number>();
+    pageViews.forEach(pv => {
+      const ref = pv.referrer || 'Direct';
+      try {
+        const hostname = ref === 'Direct' ? 'Direct' : new URL(ref).hostname;
+        referrerCounts.set(hostname, (referrerCounts.get(hostname) || 0) + 1);
+      } catch {
+        referrerCounts.set(ref, (referrerCounts.get(ref) || 0) + 1);
+      }
+    });
+
+    const referrersList = document.getElementById('referrers-list')!;
+    const sortedReferrers = Array.from(referrerCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    if (sortedReferrers.length === 0) {
+      referrersList.innerHTML = '<li class="empty">No referrer data yet</li>';
+    } else {
+      referrersList.innerHTML = sortedReferrers.map(([ref, count]) => `
+        <li><span class="ref-name">${ref}</span> <span class="ref-count">${count}</span></li>
+      `).join('');
+    }
+
+    // Render recent visitors
+    const recentList = document.getElementById('recent-list')!;
+    const recentViews = pageViews.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    ).slice(0, 15);
+    
+    if (recentViews.length === 0) {
+      recentList.innerHTML = '<li class="empty">No visitors yet</li>';
+    } else {
+      recentList.innerHTML = recentViews.map(v => {
+        const time = new Date(v.created_at).toLocaleString();
+        return `<li><span class="recent-time">${time}</span> <span class="recent-path">${v.page_path}</span></li>`;
+      }).join('');
+    }
+  }
+
+  function formatTime(seconds: number): string {
+    if (seconds < 60) return `${seconds}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+  }
+
+  // Initialize
+  checkSession();
+</script>
+
+<style>
+  .admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: 80vh;
+  }
+
+  /* Auth Section */
+  .auth-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+  }
+
+  .auth-box {
+    background: var(--bg);
+    border: 1px solid var(--fg-d);
+    border-radius: 8px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+
+  .auth-box h1 {
+    margin-bottom: 0.5rem;
+  }
+
+  .auth-box p {
+    color: var(--fg-d);
+    margin-bottom: 1.5rem;
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .login-form input {
+    padding: 0.75rem;
+    background: transparent;
+    border: 1px solid var(--fg-d);
+    border-radius: 4px;
+    color: var(--fg);
+    font-family: var(--font-mono);
+  }
+
+  .login-form input:focus {
+    outline: none;
+    border-color: var(--terminal-green);
+  }
+
+  .login-form button {
+    padding: 0.75rem;
+    background: var(--terminal-green);
+    border: none;
+    border-radius: 4px;
+    color: var(--bg);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .login-form button:hover {
+    opacity: 0.9;
+  }
+
+  .auth-error {
+    color: #ff6b6b;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* Dashboard */
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .dashboard-header h1 {
+    margin: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .header-actions select,
+  .header-actions button {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid var(--fg-d);
+    border-radius: 4px;
+    color: var(--fg);
+    font-family: var(--font-mono);
+    cursor: pointer;
+  }
+
+  .header-actions select:hover,
+  .header-actions button:hover {
+    border-color: var(--terminal-green);
+  }
+
+  /* Stats Overview */
+  .stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--bg);
+    border: 1px solid var(--fg-d);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--fg-d);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--terminal-green);
+    font-family: var(--font-mono);
+  }
+
+  /* Sections */
+  section {
+    margin-bottom: 2rem;
+  }
+
+  section h2 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+
+  /* Posts Table */
+  .posts-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .posts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .posts-table th,
+  .posts-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--fg-d);
+  }
+
+  .posts-table th {
+    color: var(--fg-d);
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+
+  .posts-table a {
+    color: var(--terminal-green);
+  }
+
+  .posts-table .loading,
+  .posts-table .empty {
+    text-align: center;
+    color: var(--fg-d);
+    padding: 2rem;
+  }
+
+  /* Referrers List */
+  .referrers-list,
+  .recent-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .referrers-list li,
+  .recent-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--fg-d);
+    font-size: 0.9rem;
+  }
+
+  .ref-count {
+    color: var(--terminal-green);
+    font-family: var(--font-mono);
+  }
+
+  .recent-time {
+    color: var(--fg-d);
+    font-size: 0.8rem;
+  }
+
+  .recent-path {
+    color: var(--terminal-green);
+  }
+
+  .loading, .empty {
+    color: var(--fg-d);
+    font-style: italic;
+  }
+
+  @media (max-width: 600px) {
+    .admin-container {
+      padding: 1rem;
+    }
+
+    .dashboard-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .stats-overview {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
