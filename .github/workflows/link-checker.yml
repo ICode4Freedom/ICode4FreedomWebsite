@@ -1,0 +1,58 @@
+name: Check Broken Links
+
+on:
+  schedule:
+    # Run every Sunday at midnight
+    - cron: '0 0 * * 0'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  link-checker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Links
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: >
+            --verbose
+            --no-progress
+            --accept 200,204,206,301,302,303,307,308
+            --exclude-mail
+            --exclude "^https://x.com"
+            --exclude "^https://twitter.com"
+            --exclude "localhost"
+            --exclude "127.0.0.1"
+            './src/**/*.md'
+            './src/**/*.astro'
+          output: ./lychee-report.md
+          fail: false
+
+      - name: Read Report
+        id: report
+        run: |
+          if [ -f ./lychee-report.md ]; then
+            # Check if there are any broken links
+            if grep -q "🔴\|❌\|Errors\|Failed" ./lychee-report.md 2>/dev/null; then
+              echo "has_errors=true" >> $GITHUB_OUTPUT
+              echo "report<<EOF" >> $GITHUB_OUTPUT
+              cat ./lychee-report.md >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              echo "has_errors=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "has_errors=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Issue for Broken Links
+        if: steps.report.outputs.has_errors == 'true'
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "🔗 Broken Links Found"
+          content-filepath: ./lychee-report.md
+          labels: |
+            bug
+            automated
