@@ -121,14 +121,20 @@ const { blogs = [] } = Astro.props;
       '║  projects  - Current projects              ║',
       '║  blogs     - List all blog posts           ║',
       '║  read <n>  - Preview blog post #n          ║',
+      '║  series    - View blog series              ║',
       '║  tags      - Show all available tags       ║',
       '║  social    - Social links & stats          ║',
       '║  contact   - Contact information           ║',
       '║  hire      - Work with me                  ║',
       '║  now       - What I\'m doing now            ║',
+      '║  uses      - Tools & setup I use           ║',
+      '║  comments  - About blog comments           ║',
       '║  subscribe - Newsletter signup             ║',
       '║  rss       - RSS feed info                 ║',
       '║  theme     - Toggle dark/light mode        ║',
+      '╠════════════════════════════════════════════╣',
+      '║  ls, cd, cat, pwd - Unix-like navigation   ║',
+      '║  neofetch  - System info                   ║',
       '╚════════════════════════════════════════════╝',
       ''
     ],
@@ -400,7 +406,189 @@ const { blogs = [] } = Astro.props;
       '     █░░░░░░░░░░░░░░█       ',
       '      █░░░░░░░░░░░░█        ',
       ''
-    ]
+    ],
+
+    series: () => [
+      '',
+      '╔══════════════════════════════════════════════╗',
+      '║              📚 BLOG SERIES                  ║',
+      '╚══════════════════════════════════════════════╝',
+      '',
+      '  🇯🇵 JAPAN SERIES',
+      '     My journey studying abroad & coming home',
+      '     ├─ Part 1: Living in Japan for 3 Months',
+      '     └─ Part 2: Growing Pains and Growth Cycles',
+      '     → /series/japan',
+      '',
+      '  💡 LIFE LESSONS',
+      '     Reflections on growth & relationships',
+      '     └─ Friendships, Breakups, and Growth',
+      '     → /series/life-lessons',
+      '',
+      '  ─────────────────────────────────────────────',
+      '  View all: /series',
+      ''
+    ],
+
+    uses: () => [
+      '',
+      '╔══════════════════════════════════════════════╗',
+      '║             🛠️  WHAT I USE                   ║',
+      '╚══════════════════════════════════════════════╝',
+      '',
+      '  Hardware, software, and tools I use daily.',
+      '',
+      '  → https://icode4freedom.com/uses',
+      '',
+      '  Inspired by uses.tech',
+      ''
+    ],
+
+    comments: () => [
+      '',
+      '💬 COMMENTS:',
+      '─'.repeat(40),
+      '  Blog posts now have comments!',
+      '  Powered by GitHub Discussions (Giscus)',
+      '',
+      '  • Sign in with GitHub to comment',
+      '  • Reactions supported',
+      '  • Syncs with dark/light mode',
+      '',
+      '  Scroll to the bottom of any blog post',
+      '  to join the discussion!',
+      ''
+    ],
+
+    analytics: () => [
+      '',
+      '📊 ANALYTICS:',
+      '─'.repeat(40),
+      '  Admin-only feature.',
+      '',
+      '  If you\'re Mike, head to:',
+      '  → /admin/analytics',
+      '',
+      '  Tracks: views, scroll depth, clicks,',
+      '  shares, subscribes, and more.',
+      '',
+      '  Privacy: No cookies, fingerprint-based.',
+      ''
+    ],
+
+    '404': () => [
+      '',
+      '  ╔════════════════════════════════════════╗',
+      '  ║   ERROR 404: Easter Egg Found! 🥚      ║',
+      '  ╚════════════════════════════════════════╝',
+      '',
+      '  You found a hidden command!',
+      '  Here\'s a cookie: 🍪',
+      '',
+      '  Try: rickroll, matrix, coffee',
+      ''
+    ],
+
+    rickroll: () => {
+      window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+      return 'Never gonna give you up... 🎵';
+    },
+
+    matrix: () => [
+      '',
+      '  Wake up, Neo...',
+      '  The Matrix has you...',
+      '  Follow the white rabbit. 🐇',
+      '',
+      '  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓',
+      '  ▓ 01001000 01100101 01101100 ▓',
+      '  ▓ 01101100 01101111 00100001 ▓',
+      '  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓',
+      ''
+    ],
+
+    coffee: () => [
+      '',
+      '  ╔════════════════════════════════════════╗',
+      '  ║         ☕ COFFEE BREAK                ║',
+      '  ╚════════════════════════════════════════╝',
+      '',
+      '        ( (',
+      '         ) )',
+      '      ........',
+      '      |      |]',
+      '      \\      /',
+      '       `----\'',
+      '',
+      '  Fuel for coding. Essential.',
+      '',
+      '  Support my caffeine addiction:',
+      '  → buymeacoffee.com/ICode4Freedom',
+      ''
+    ],
+
+    sudo: () => 'Nice try. 😏',
+
+    rm: () => 'Whoa there! This isn\'t that kind of terminal.',
+
+    ls: () => [
+      '',
+      'drwxr-xr-x  blogs/',
+      'drwxr-xr-x  series/',
+      '-rw-r--r--  about.md',
+      '-rw-r--r--  now.md',
+      '-rw-r--r--  uses.md',
+      '-rw-r--r--  subscribe.md',
+      ''
+    ],
+
+    cd: (args: string[]) => {
+      const dir = args[0];
+      if (!dir) return 'Usage: cd <directory>';
+      if (dir === 'blogs' || dir === '/blogs') {
+        window.location.href = '/';
+        return 'Navigating to blogs...';
+      }
+      if (dir === 'series' || dir === '/series') {
+        window.location.href = '/series';
+        return 'Navigating to series...';
+      }
+      if (dir === '~' || dir === '/') {
+        window.location.href = '/';
+        return 'Navigating home...';
+      }
+      return `cd: ${dir}: No such directory`;
+    },
+
+    cat: (args: string[]) => {
+      const file = args[0];
+      if (!file) return 'Usage: cat <file>';
+      if (file === 'about.md') {
+        window.location.href = '/about';
+        return 'Opening about.md...';
+      }
+      if (file === 'now.md') {
+        window.location.href = '/now';
+        return 'Opening now.md...';
+      }
+      if (file === 'uses.md') {
+        window.location.href = '/uses';
+        return 'Opening uses.md...';
+      }
+      return `cat: ${file}: No such file`;
+    },
+
+    pwd: () => '/home/visitor/icode4freedom.com',
+
+    man: (args: string[]) => {
+      if (!args[0]) return 'What manual page do you want?';
+      return `No manual entry for ${args[0]}. Try "help" instead.`;
+    },
+
+    exit: () => {
+      window.close();
+      return 'Goodbye! (If this didn\'t close, your browser blocked it)';
+    }
   };
 
   function printOutput(text: string | string[]) {
