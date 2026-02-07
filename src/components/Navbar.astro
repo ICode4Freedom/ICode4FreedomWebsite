@@ -1,44 +1,11 @@
 ---
-import Search from './Search.astro';
+
 ---
 
 <div class="nav">
-  <div class="nav-content">
-    <a href="/" class="nav-logo">[ICode4Freedom]</a>
-    <div class="nav-right">
-      <Search />
+  <ul>
+    <div>
+      <li><a href="/">[ICode4Freedom]</a></li>
     </div>
-  </div>
+  </ul>
 </div>
-
-<style>
-  .nav {
-    background-color: var(--ui-bg);
-    padding: 0.875rem 1rem;
-  }
-
-  .nav-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .nav-logo {
-    font-family: var(--font-fancy);
-    text-decoration: none;
-    font-size: 2rem;
-    color: var(--fg);
-  }
-
-  .nav-logo:hover {
-    color: var(--fg-d);
-  }
-
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-</style>
