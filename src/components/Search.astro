@@ -23,81 +23,98 @@
 </div>
 
 <script is:inline>
-  async function initSearch() {
-    const trigger = document.getElementById('search-trigger');
-    const modal = document.getElementById('search-modal');
-    const backdrop = modal?.querySelector('.search-backdrop');
-    const closeBtn = modal?.querySelector('.search-close');
-    const content = document.getElementById('search-content');
+  (function() {
+    var trigger = document.getElementById('search-trigger');
+    var modal = document.getElementById('search-modal');
+    var backdrop = modal ? modal.querySelector('.search-backdrop') : null;
+    var closeBtn = modal ? modal.querySelector('.search-close') : null;
+    var content = document.getElementById('search-content');
     
-    let pagefindLoaded = false;
+    var pagefindLoaded = false;
 
-    async function loadPagefind() {
+    function loadPagefind() {
       if (pagefindLoaded) return;
       
       // Load CSS
       if (!document.querySelector('link[href*="pagefind-ui.css"]')) {
-        const link = document.createElement('link');
+        var link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = '/pagefind/pagefind-ui.css';
         document.head.appendChild(link);
       }
       
-      try {
-        const pagefindModule = await import('/pagefind/pagefind-ui.js');
-        const PagefindUI = pagefindModule.PagefindUI;
-        new PagefindUI({
-          element: '#search-content',
-          showSubResults: true,
-          showImages: false,
-        });
-        pagefindLoaded = true;
-      } catch (e) {
+      // Dynamic import for Pagefind
+      var script = document.createElement('script');
+      script.src = '/pagefind/pagefind-ui.js';
+      script.onload = function() {
+        if (window.PagefindUI) {
+          new window.PagefindUI({
+            element: '#search-content',
+            showSubResults: true,
+            showImages: false,
+          });
+          pagefindLoaded = true;
+        }
+      };
+      script.onerror = function() {
         if (content) {
           content.innerHTML = '<p class="search-error">Search not available. Try refreshing.</p>';
         }
-      }
+      };
+      document.head.appendChild(script);
     }
 
     function openModal() {
-      modal!.style.display = 'flex';
+      if (!modal) return;
+      modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
       loadPagefind();
-      setTimeout(() => {
-        const input = content?.querySelector('input');
-        input?.focus();
-      }, 100);
+      setTimeout(function() {
+        var input = content ? content.querySelector('input') : null;
+        if (input) input.focus();
+      }, 200);
     }
 
     function closeModal() {
-      modal!.style.display = 'none';
+      if (!modal) return;
+      modal.style.display = 'none';
       document.body.style.overflow = '';
     }
 
-    trigger?.addEventListener('click', openModal);
-    backdrop?.addEventListener('click', closeModal);
-    closeBtn?.addEventListener('click', closeModal);
+    // Click and touch events
+    if (trigger) {
+      trigger.addEventListener('click', openModal);
+      trigger.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        openModal();
+      });
+    }
+    if (backdrop) {
+      backdrop.addEventListener('click', closeModal);
+      backdrop.addEventListener('touchend', closeModal);
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+      closeBtn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        closeModal();
+      });
+    }
 
     // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', function(e) {
+      var tagName = e.target && e.target.tagName;
       // Open with /
-      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as Element).tagName)) {
+      if (e.key === '/' && tagName !== 'INPUT' && tagName !== 'TEXTAREA') {
         e.preventDefault();
         openModal();
       }
       // Close with Escape
-      if (e.key === 'Escape' && modal?.style.display === 'flex') {
+      if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
         closeModal();
       }
     });
-  }
-
-  // Initialize on page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSearch);
-  } else {
-    initSearch();
-  }
+  })();
 </script>
 
 <style>
