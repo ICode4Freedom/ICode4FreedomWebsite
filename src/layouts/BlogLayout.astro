@@ -7,6 +7,8 @@ import ReadingProgress from "../components/ReadingProgress.astro";
 import ImageLightbox from "../components/ImageLightbox.astro";
 import RelatedPosts from "../components/RelatedPosts.astro";
 import Comments from "../components/Comments.astro";
+import SeriesNav from "../components/SeriesNav.astro";
+import { getSeriesBySlug } from "../data/series";
 
 const { frontmatter, url, rawContent } = Astro.props;
 
@@ -67,6 +69,12 @@ const titleSlug = frontmatter.title
 
 // OG Image: use post image or generate path
 const ogImage = frontmatter.image || `/og/${titleSlug}.png`;
+
+// Series info
+const seriesSlug = typeof frontmatter.series === 'string' 
+  ? frontmatter.series 
+  : frontmatter.series?.slug;
+const seriesInfo = seriesSlug ? getSeriesBySlug(seriesSlug) : null;
 ---
 
 <BaseLayout 
@@ -117,6 +125,11 @@ const ogImage = frontmatter.image || `/og/${titleSlug}.png`;
       </header>
 
       <hr class="divider" />
+
+      <!-- Series Navigation -->
+      {seriesInfo && (
+        <SeriesNav series={seriesInfo} currentUrl={url} />
+      )}
 
       <!-- Main Content -->
       <div class="content-wrapper">

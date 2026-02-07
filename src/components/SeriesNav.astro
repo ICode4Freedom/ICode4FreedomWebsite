@@ -1,0 +1,124 @@
+---
+// Series Navigation Component
+// Shows series info and links to other posts in the series
+
+interface SeriesInfo {
+  name: string;
+  slug: string;
+  description?: string;
+}
+
+interface Props {
+  series: SeriesInfo;
+  currentUrl: string;
+}
+
+const { series, currentUrl } = Astro.props;
+
+// Get all posts in this series
+const allPostsRaw = Object.values(import.meta.glob('../pages/blogs/*.md', { eager: true }));
+const seriesPosts = allPostsRaw
+  .filter((post: any) => {
+    const postSeries = post.frontmatter.series;
+    if (!postSeries) return false;
+    if (typeof postSeries === 'string') return postSeries === series.slug;
+    return postSeries.slug === series.slug;
+  })
+  .sort((a: any, b: any) => new Date(a.frontmatter.pubDate).getTime() - new Date(b.frontmatter.pubDate).getTime());
+
+const currentIndex = seriesPosts.findIndex((post: any) => post.url === currentUrl);
+const totalParts = seriesPosts.length;
+const currentPart = currentIndex + 1;
+---
+
+{seriesPosts.length > 1 && (
+  <div class="series-nav">
+    <div class="series-header">
+      <span class="series-label">📚 Series:</span>
+      <a href={`/series/${series.slug}`} class="series-name">{series.name}</a>
+      <span class="series-progress">Part {currentPart} of {totalParts}</span>
+    </div>
+    
+    <div class="series-posts">
+      {seriesPosts.map((post: any, index: number) => (
+        <a 
+          href={post.url} 
+          class={`series-post ${post.url === currentUrl ? 'current' : ''}`}
+          title={post.frontmatter.title}
+        >
+          {index + 1}
+        </a>
+      ))}
+    </div>
+  </div>
+)}
+
+<style>
+  .series-nav {
+    background: var(--ui-bg);
+    border: 1px solid var(--terminal-green);
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .series-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .series-label {
+    color: var(--fg-d);
+    font-size: 0.85rem;
+  }
+
+  .series-name {
+    color: var(--terminal-green);
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .series-name:hover {
+    text-decoration: underline;
+  }
+
+  .series-progress {
+    color: var(--fg-d);
+    font-size: 0.8rem;
+    margin-left: auto;
+  }
+
+  .series-posts {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .series-post {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--fg-d);
+    border-radius: 4px;
+    color: var(--fg);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    transition: all 0.2s;
+  }
+
+  .series-post:hover {
+    border-color: var(--terminal-green);
+    color: var(--terminal-green);
+  }
+
+  .series-post.current {
+    background: var(--terminal-green);
+    border-color: var(--terminal-green);
+    color: var(--bg);
+  }
+</style>

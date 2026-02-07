@@ -1,0 +1,156 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { series, getSeriesBySlug } from '../../data/series';
+
+export function getStaticPaths() {
+  return series.map((s) => ({
+    params: { slug: s.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const seriesInfo = getSeriesBySlug(slug);
+
+if (!seriesInfo) {
+  return Astro.redirect('/404');
+}
+
+// Get all posts in this series
+const allPostsRaw = Object.values(import.meta.glob('../blogs/*.md', { eager: true }));
+const seriesPosts = allPostsRaw
+  .filter((post: any) => {
+    const postSeries = post.frontmatter.series;
+    if (!postSeries) return false;
+    if (typeof postSeries === 'string') return postSeries === slug;
+    return postSeries.slug === slug;
+  })
+  .sort((a: any, b: any) => new Date(a.frontmatter.pubDate).getTime() - new Date(b.frontmatter.pubDate).getTime());
+---
+
+<BaseLayout title={seriesInfo.name} description={seriesInfo.description}>
+  <div class="series-detail">
+    <header class="page-header">
+      <a href="/series" class="back-link">← All Series</a>
+      <h1>📚 {seriesInfo.name}</h1>
+      <p class="description">{seriesInfo.description}</p>
+      <p class="post-count">{seriesPosts.length} post{seriesPosts.length !== 1 ? 's' : ''} in this series</p>
+    </header>
+
+    <div class="posts-list">
+      {seriesPosts.map((post: any, index: number) => (
+        <a href={post.url} class="post-card">
+          <span class="post-number">Part {index + 1}</span>
+          <div class="post-info">
+            <h2 class="post-title">{post.frontmatter.title}</h2>
+            <p class="post-desc">{post.frontmatter.description}</p>
+            <time class="post-date">
+              {new Date(post.frontmatter.pubDate).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </time>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .series-detail {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .back-link {
+    color: var(--fg-d);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+
+  .back-link:hover {
+    color: var(--terminal-green);
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    margin-bottom: 0.5rem;
+  }
+
+  .description {
+    color: var(--fg-d);
+    margin-bottom: 0.5rem;
+  }
+
+  .post-count {
+    font-size: 0.85rem;
+    color: var(--terminal-green);
+    font-family: var(--font-mono);
+  }
+
+  .posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .post-card {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border: 2px solid var(--fg-d);
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--fg);
+    transition: all 0.2s;
+  }
+
+  .post-card:hover {
+    border-color: var(--terminal-green);
+  }
+
+  .post-number {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--terminal-green);
+    background: var(--ui-bg);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    height: fit-content;
+    white-space: nowrap;
+  }
+
+  .post-info {
+    flex: 1;
+  }
+
+  .post-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-desc {
+    color: var(--fg-d);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-date {
+    font-size: 0.8rem;
+    color: var(--fg-d);
+  }
+
+  @media (max-width: 600px) {
+    .post-card {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+  }
+</style>

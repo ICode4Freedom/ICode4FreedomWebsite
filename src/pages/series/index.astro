@@ -1,0 +1,96 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { series } from '../../data/series';
+
+// Get all posts to count series membership
+const allPostsRaw = Object.values(import.meta.glob('../blogs/*.md', { eager: true }));
+
+function getPostCountForSeries(slug: string): number {
+  return allPostsRaw.filter((post: any) => {
+    const postSeries = post.frontmatter.series;
+    if (!postSeries) return false;
+    if (typeof postSeries === 'string') return postSeries === slug;
+    return postSeries.slug === slug;
+  }).length;
+}
+---
+
+<BaseLayout title="Series" description="Blog post series and collections">
+  <div class="series-page">
+    <header class="page-header">
+      <h1>📚 Series</h1>
+      <p class="subtitle">Collections of related posts</p>
+    </header>
+
+    <div class="series-list">
+      {series.map((s) => {
+        const postCount = getPostCountForSeries(s.slug);
+        return (
+          <a href={`/series/${s.slug}`} class="series-card">
+            <h2 class="series-title">{s.name}</h2>
+            <p class="series-desc">{s.description}</p>
+            <span class="series-count">{postCount} post{postCount !== 1 ? 's' : ''}</span>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .series-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: var(--fg-d);
+  }
+
+  .series-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .series-card {
+    display: block;
+    padding: 1.5rem;
+    border: 2px solid var(--fg-d);
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--fg);
+    transition: all 0.2s;
+  }
+
+  .series-card:hover {
+    border-color: var(--terminal-green);
+  }
+
+  .series-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--terminal-green);
+  }
+
+  .series-desc {
+    color: var(--fg-d);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .series-count {
+    font-size: 0.8rem;
+    color: var(--fg-d);
+    font-family: var(--font-mono);
+  }
+</style>
