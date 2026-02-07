@@ -100,6 +100,54 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <li class="loading">Loading...</li>
         </ul>
       </section>
+
+      <section class="scroll-section">
+        <h2>📊 Scroll Depth Distribution</h2>
+        <div class="scroll-chart" id="scroll-chart">
+          <div class="scroll-bar" data-depth="0-25">
+            <span class="scroll-label">0-25%</span>
+            <div class="scroll-fill" id="scroll-0-25"></div>
+            <span class="scroll-count" id="scroll-count-0-25">0</span>
+          </div>
+          <div class="scroll-bar" data-depth="25-50">
+            <span class="scroll-label">25-50%</span>
+            <div class="scroll-fill" id="scroll-25-50"></div>
+            <span class="scroll-count" id="scroll-count-25-50">0</span>
+          </div>
+          <div class="scroll-bar" data-depth="50-75">
+            <span class="scroll-label">50-75%</span>
+            <div class="scroll-fill" id="scroll-50-75"></div>
+            <span class="scroll-count" id="scroll-count-50-75">0</span>
+          </div>
+          <div class="scroll-bar" data-depth="75-100">
+            <span class="scroll-label">75-100%</span>
+            <div class="scroll-fill" id="scroll-75-100"></div>
+            <span class="scroll-count" id="scroll-count-75-100">0</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="heatmap-section">
+        <h2>🔥 Click Heatmap</h2>
+        <div class="heatmap-controls">
+          <select id="heatmap-page">
+            <option value="">Select a page...</option>
+          </select>
+        </div>
+        <div class="heatmap-container" id="heatmap-container">
+          <p class="heatmap-placeholder">Select a page to view click heatmap</p>
+        </div>
+      </section>
+
+      <section class="ab-section">
+        <h2>🧪 A/B Tests</h2>
+        <div class="ab-controls">
+          <button id="new-ab-test" class="btn-primary">+ New Test</button>
+        </div>
+        <div class="ab-tests-list" id="ab-tests-list">
+          <p class="empty">No active A/B tests. Create one to start testing headlines!</p>
+        </div>
+      </section>
     </div>
   </div>
 </BaseLayout>
@@ -363,6 +411,151 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     return `${mins}m ${secs}s`;
   }
 
+  // Load scroll depth visualization
+  async function loadScrollDepth() {
+    const engagement = await supabaseQuery('page_engagement', '?select=max_scroll_depth');
+    
+    let depth0_25 = 0, depth25_50 = 0, depth50_75 = 0, depth75_100 = 0;
+    
+    engagement.forEach(e => {
+      const depth = e.max_scroll_depth || 0;
+      if (depth < 25) depth0_25++;
+      else if (depth < 50) depth25_50++;
+      else if (depth < 75) depth50_75++;
+      else depth75_100++;
+    });
+    
+    const total = engagement.length || 1;
+    
+    const updateBar = (id: string, count: number) => {
+      const fill = document.getElementById(id);
+      const countEl = document.getElementById(id.replace('scroll-', 'scroll-count-'));
+      if (fill) fill.style.width = `${(count / total) * 100}%`;
+      if (countEl) countEl.textContent = count.toString();
+    };
+    
+    updateBar('scroll-0-25', depth0_25);
+    updateBar('scroll-25-50', depth25_50);
+    updateBar('scroll-50-75', depth50_75);
+    updateBar('scroll-75-100', depth75_100);
+  }
+
+  // Load heatmap data
+  async function loadHeatmap(pagePath: string) {
+    const container = document.getElementById('heatmap-container')!;
+    
+    if (!pagePath) {
+      container.innerHTML = '<p class="heatmap-placeholder">Select a page to view click heatmap</p>';
+      return;
+    }
+    
+    const clicks = await supabaseQuery('click_events', `?page_path=eq.${encodeURIComponent(pagePath)}&select=x_percent,y_percent`);
+    
+    if (clicks.length === 0) {
+      container.innerHTML = '<p class="heatmap-placeholder">No click data for this page yet</p>';
+      return;
+    }
+    
+    // Create heatmap grid
+    container.innerHTML = '<div class="heatmap-grid" id="heatmap-grid"></div>';
+    const grid = document.getElementById('heatmap-grid')!;
+    
+    // Create 10x20 grid cells
+    const cellCounts: number[][] = Array(20).fill(null).map(() => Array(10).fill(0));
+    let maxCount = 0;
+    
+    clicks.forEach(c => {
+      const col = Math.min(9, Math.floor(c.x_percent / 10));
+      const row = Math.min(19, Math.floor(c.y_percent / 5));
+      cellCounts[row][col]++;
+      maxCount = Math.max(maxCount, cellCounts[row][col]);
+    });
+    
+    for (let row = 0; row < 20; row++) {
+      for (let col = 0; col < 10; col++) {
+        const cell = document.createElement('div');
+        cell.className = 'heatmap-cell';
+        const intensity = maxCount > 0 ? cellCounts[row][col] / maxCount : 0;
+        cell.style.backgroundColor = `rgba(0, 255, 0, ${intensity * 0.8})`;
+        cell.title = `${cellCounts[row][col]} clicks`;
+        grid.appendChild(cell);
+      }
+    }
+  }
+
+  // Populate heatmap page selector
+  async function populateHeatmapPages() {
+    const pageViews = await supabaseQuery('page_views', '?select=page_path');
+    const uniquePaths = [...new Set(pageViews.map(p => p.page_path))].filter(p => p.includes('/blogs/'));
+    
+    const select = document.getElementById('heatmap-page') as HTMLSelectElement;
+    uniquePaths.forEach(path => {
+      const option = document.createElement('option');
+      option.value = path;
+      option.textContent = path.replace('/blogs/', 'Blog #');
+      select.appendChild(option);
+    });
+    
+    select.addEventListener('change', () => loadHeatmap(select.value));
+  }
+
+  // Load A/B tests
+  async function loadABTests() {
+    const tests = await supabaseQuery('ab_tests', '?select=*');
+    const container = document.getElementById('ab-tests-list')!;
+    
+    if (tests.length === 0) {
+      container.innerHTML = '<p class="empty">No active A/B tests. Create one to start testing headlines!</p>';
+      return;
+    }
+    
+    const results = await supabaseQuery('ab_test_results', '?select=*');
+    
+    container.innerHTML = tests.map(test => {
+      const testResults = results.filter(r => r.test_id === test.id);
+      const variantA = testResults.filter(r => r.variant === 'A');
+      const variantB = testResults.filter(r => r.variant === 'B');
+      
+      const engagedA = variantA.filter(r => r.engaged).length;
+      const engagedB = variantB.filter(r => r.engaged).length;
+      
+      const rateA = variantA.length > 0 ? Math.round((engagedA / variantA.length) * 100) : 0;
+      const rateB = variantB.length > 0 ? Math.round((engagedB / variantB.length) * 100) : 0;
+      
+      const winner = rateA > rateB ? 'A' : rateB > rateA ? 'B' : 'tie';
+      
+      return `
+        <div class="ab-test-card ${test.is_active ? 'active' : 'inactive'}">
+          <div class="ab-test-header">
+            <span class="ab-test-path">${test.page_path}</span>
+            <span class="ab-test-status">${test.is_active ? '🟢 Active' : '⚪ Inactive'}</span>
+          </div>
+          <div class="ab-variants">
+            <div class="ab-variant ${winner === 'A' ? 'winner' : ''}">
+              <span class="variant-label">A (Original)</span>
+              <span class="variant-title">${test.variant_a}</span>
+              <span class="variant-stats">${variantA.length} views · ${rateA}% engaged</span>
+            </div>
+            <div class="ab-variant ${winner === 'B' ? 'winner' : ''}">
+              <span class="variant-label">B (Test)</span>
+              <span class="variant-title">${test.variant_b}</span>
+              <span class="variant-stats">${variantB.length} views · ${rateB}% engaged</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Initialize new features after login
+  const originalLoadAnalytics = loadAnalytics;
+  loadAnalytics = async function() {
+    await originalLoadAnalytics();
+    await loadScrollDepth();
+    await populateHeatmapPages();
+    await loadABTests();
+  };
+
   // Initialize
   checkSession();
 </script>
@@ -605,5 +798,170 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     .stats-overview {
       grid-template-columns: repeat(2, 1fr);
     }
+  }
+
+  /* Scroll Depth Chart */
+  .scroll-section {
+    margin-bottom: 2rem;
+  }
+
+  .scroll-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .scroll-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .scroll-label {
+    width: 60px;
+    font-size: 0.8rem;
+    color: var(--fg-d);
+  }
+
+  .scroll-fill {
+    height: 24px;
+    background: var(--terminal-green);
+    border-radius: 4px;
+    transition: width 0.3s;
+    min-width: 2px;
+  }
+
+  .scroll-count {
+    font-size: 0.85rem;
+    color: var(--fg);
+    font-family: var(--font-mono);
+  }
+
+  /* Heatmap */
+  .heatmap-section {
+    margin-bottom: 2rem;
+  }
+
+  .heatmap-controls {
+    margin-bottom: 1rem;
+  }
+
+  .heatmap-controls select {
+    padding: 0.5rem;
+    background: var(--bg);
+    border: 1px solid var(--fg-d);
+    border-radius: 4px;
+    color: var(--fg);
+    font-family: var(--font-mono);
+  }
+
+  .heatmap-container {
+    background: var(--ui-bg);
+    border: 1px solid var(--fg-d);
+    border-radius: 4px;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .heatmap-placeholder {
+    color: var(--fg-d);
+    font-style: italic;
+  }
+
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 1px;
+    width: 100%;
+    aspect-ratio: 1/2;
+  }
+
+  .heatmap-cell {
+    background: rgba(0, 255, 0, 0.05);
+    min-height: 10px;
+  }
+
+  /* A/B Tests */
+  .ab-section {
+    margin-bottom: 2rem;
+  }
+
+  .ab-controls {
+    margin-bottom: 1rem;
+  }
+
+  .btn-primary {
+    padding: 0.5rem 1rem;
+    background: var(--terminal-green);
+    border: none;
+    border-radius: 4px;
+    color: var(--bg);
+    font-family: var(--font-mono);
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  .ab-test-card {
+    border: 1px solid var(--fg-d);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .ab-test-card.active {
+    border-color: var(--terminal-green);
+  }
+
+  .ab-test-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .ab-test-path {
+    color: var(--terminal-green);
+  }
+
+  .ab-test-status {
+    font-size: 0.85rem;
+  }
+
+  .ab-variants {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .ab-variant {
+    padding: 0.75rem;
+    background: var(--ui-bg);
+    border-radius: 4px;
+  }
+
+  .ab-variant.winner {
+    border: 1px solid var(--terminal-green);
+  }
+
+  .variant-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--fg-d);
+    margin-bottom: 0.25rem;
+  }
+
+  .variant-title {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .variant-stats {
+    font-size: 0.8rem;
+    color: var(--fg-d);
   }
 </style>

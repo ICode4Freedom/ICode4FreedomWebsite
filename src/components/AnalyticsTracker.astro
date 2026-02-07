@@ -202,6 +202,9 @@
       document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
         
+        // Track click for heatmap
+        this.trackClick(e, target);
+        
         if (target.id === 'share-btn' || target.closest('#share-btn')) {
           this.trackEvent('share', { platform: 'twitter' });
         }
@@ -221,6 +224,26 @@
           this.trackEvent('subscribe', {});
         });
       });
+    }
+
+    private trackClick(e: MouseEvent, target: HTMLElement) {
+      // Calculate position as percentage
+      const xPercent = (e.clientX / window.innerWidth) * 100;
+      const yPercent = ((e.pageY) / document.documentElement.scrollHeight) * 100;
+      
+      const data = {
+        page_path: window.location.pathname,
+        visitor_id: this.state.visitorId,
+        session_id: this.state.sessionId,
+        x_percent: Math.round(xPercent * 100) / 100,
+        y_percent: Math.round(yPercent * 100) / 100,
+        element_tag: target.tagName.toLowerCase(),
+        element_text: (target.textContent || '').slice(0, 100).trim(),
+        viewport_width: window.innerWidth,
+        viewport_height: window.innerHeight
+      };
+
+      this.sendToSupabase('click_events', data);
     }
 
     async trackEvent(eventType: string, eventData: Record<string, any>) {
