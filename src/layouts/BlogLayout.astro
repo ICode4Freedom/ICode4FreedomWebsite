@@ -6,6 +6,7 @@ import BlogTyping from "../scripts/BlogTyping.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import ImageLightbox from "../components/ImageLightbox.astro";
 import RelatedPosts from "../components/RelatedPosts.astro";
+import Comments from "../components/Comments.astro";
 
 const { frontmatter, url, rawContent } = Astro.props;
 
@@ -140,6 +141,11 @@ const ogImage = frontmatter.image || `/og/${titleSlug}.png`;
           allPosts={allPostsForRelated}
           maxPosts={3}
         />
+      )}
+
+      <!-- Comments Section (only on blog posts) -->
+      {isBlogPost && (
+        <Comments title={frontmatter.title} />
       )}
 
       <!-- Footer Section -->

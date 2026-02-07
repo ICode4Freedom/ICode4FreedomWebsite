@@ -1,0 +1,97 @@
+---
+// Giscus Comments Component
+// Uses GitHub Discussions for comments
+// Docs: https://giscus.app
+
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<section class="comments-section">
+  <h2 class="comments-title">💬 Comments</h2>
+  <div class="giscus-container">
+    <script
+      src="https://giscus.app/client.js"
+      data-repo="ICode4Freedom/ICode4FreedomWebsite"
+      data-repo-id=""
+      data-category="Blog Comments"
+      data-category-id=""
+      data-mapping="pathname"
+      data-strict="0"
+      data-reactions-enabled="1"
+      data-emit-metadata="0"
+      data-input-position="top"
+      data-theme="dark"
+      data-lang="en"
+      data-loading="lazy"
+      crossorigin="anonymous"
+      async
+    ></script>
+  </div>
+</section>
+
+<script>
+  // Sync Giscus theme with site theme
+  function updateGiscusTheme() {
+    const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const giscusTheme = theme === 'light' ? 'light' : 'dark';
+    
+    const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+    if (iframe) {
+      iframe.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme: giscusTheme } } },
+        'https://giscus.app'
+      );
+    }
+  }
+
+  // Watch for theme changes
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'data-theme') {
+        updateGiscusTheme();
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, { attributes: true });
+
+  // Initial theme sync after Giscus loads
+  window.addEventListener('message', (event) => {
+    if (event.origin === 'https://giscus.app') {
+      updateGiscusTheme();
+    }
+  });
+</script>
+
+<style>
+  .comments-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px dashed var(--fg-d);
+  }
+
+  .comments-title {
+    font-size: 1.1rem;
+    color: var(--fg);
+    margin-bottom: 1.5rem;
+    font-weight: normal;
+  }
+
+  .comments-title::before {
+    content: "## ";
+    color: var(--terminal-green);
+  }
+
+  .giscus-container {
+    min-height: 150px;
+  }
+
+  /* Style the Giscus iframe container */
+  .giscus-container :global(.giscus) {
+    max-width: 100%;
+  }
+</style>
